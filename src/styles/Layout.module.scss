@@ -1,0 +1,46 @@
+@use '@styles/variables.scss' as *;
+
+
+.layout {
+    .main-container {
+        margin-top: calc(16px + $height-navbar);
+        transition: all 0.3s;
+        margin-right: 40px;
+
+        .main {
+            transition: all 0.3s;
+            margin: 0 auto;
+            width: 100%;
+            grid-area: main;
+        }
+    }
+
+    .main-container[data-reduce=true] {
+        width: calc(100vw - $reduce-sidebar-width - 80px);
+
+        .main {
+            max-width: calc(1600px - $reduce-sidebar-width - 40px);
+        }
+    }
+
+}
+
+@media (max-width: $breakpoint-md) {
+    .layout {
+        .main-container {
+            width: 100vw;
+            margin-top: $height-navbar !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding-top: 24px !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+
+            .main {
+                min-height: auto;
+            }
+        }
+
+    }
+
+}

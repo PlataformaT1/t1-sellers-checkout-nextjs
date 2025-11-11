@@ -1,0 +1,465 @@
+// Store Config Component Styles - CSS Modules
+
+.welcome {
+  color: #000000;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.userWelcome {
+  color: #000000;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.userAte {
+  color: #DB3B2B;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.formSettings {
+  margin-top: 55px;
+}
+
+.customerPhone {
+  justify-content: center;
+  padding-bottom: 10px;
+}
+
+.iconDefault {
+  position: absolute;
+  left: 98%;
+  top: 7px;
+}
+
+.selectCustom {
+  height: 54.81px;
+}
+
+// Loading spinner
+.loadingspinner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #DB3B2B;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Step text variants
+.stepText {
+  color: #DB3B2B;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-top: 10px;
+}
+
+.stepTextTelmex {
+  color: #005A8B;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-top: 10px;
+}
+
+.stepTextTelnor {
+  color: #00A650;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-top: 10px;
+}
+
+.stepTextEnvios {
+  color: #009AD9;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-top: 10px;
+}
+
+.stepTextIstelmex {
+  color: #005A8B;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-top: 10px;
+}
+
+.stepTextIstelmexfalse {
+  color: #DB3B2B;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-top: 10px;
+}
+
+.stepTextIstelnor {
+  color: #00A650;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-top: 10px;
+}
+
+// Layout classes
+.block {
+  display: block;
+}
+
+.center {
+  text-align: center;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -0.75rem;
+  margin-left: -0.75rem;
+}
+
+.mt1 {
+  margin-top: 0.5rem;
+}
+
+.mb1 {
+  margin-bottom: 0.5rem;
+}
+
+.colSm12 {
+  flex: 0 0 auto;
+  width: 100%;
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+}
+
+.dFlex {
+  display: flex;
+}
+
+.justifyContentCenter {
+  justify-content: center;
+}
+
+// Image styles
+.imgFluidImg {
+  width: 29%;
+  margin-left: -15px;
+  max-width: 100%;
+  height: auto;
+}
+
+// Card styles
+.cardHome {
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+}
+
+.cardStores {
+  // Additional styles for regular stores
+}
+
+.cardStoresT1comercios {
+  // Specific styles for T1 Comercios
+  border: 1px solid #e0e0e0;
+}
+
+.rounded0 {
+  border-radius: 0;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 50px;
+  gap: 25px;
+  background-color: white;
+  border-radius: 12px;
+  width: 515px;
+}
+
+.cardImage {
+  width: 36px;
+  height: 36px;
+}
+
+.textT1comerciosPrincipal {
+  font-size: 26px !important;
+  text-align: center;
+  font-weight: 600 !important;
+  color: #4C4C4C;
+  margin: 0;
+}
+
+.cardForm {
+  width: 100%;
+}
+
+// Form styles
+.input {
+  position: relative;
+  width: 100%;
+}
+
+.inputLabel {
+  width: 100%;
+  padding-bottom: 15px;
+}
+
+.inputField {
+  width: 100%;
+  font-size: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  MuiOutlinedInput-root {
+    height: 50px !important;
+  }
+
+  &:focus {
+    border-color: #DB3B2B;
+    box-shadow: 0 0 0 2px rgba(219, 59, 43, 0.2);
+    outline: none;
+  }
+
+  &::placeholder {
+    color: #999;
+  }
+}
+
+.isInvalid {
+  .inputField {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+  }
+}
+
+// Validation icons
+.validateName {
+  color: #bbe88a;
+  position: absolute;
+  top: 37%;
+  right: 9px;
+  transform: translateY(-50%);
+  z-index: 1;
+  font-size: 26px;
+}
+
+.validateError {
+  color: #ff3333;
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  transform: translateY(-50%);
+  z-index: 1;
+  font-size: 26px;
+}
+
+// Error messages
+.errorMns {
+  font-size: 0.857rem;
+  color: #ea5455;
+  margin-top: 5px;
+}
+
+.textDanger {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}
+
+// Button styles
+.buttonContainer {
+  width: 100%;
+  margin-top: 25px;
+}
+
+.btn {
+  display: inline-block;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 16px;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  font-weight: 300 !important;
+
+  &:disabled {
+    pointer-events: none;
+    opacity: 0.65;
+  }
+}
+
+.btnPrimary {
+  color: #fff;
+  background-color: #DB3B2B;
+  border-color: #DB3B2B;
+
+  &:hover:not(:disabled) {
+    color: #fff;
+    background-color: #c02a1e;
+    border-color: #c02a1e;
+  }
+
+  &:focus {
+    color: #fff;
+    background-color: #c02a1e;
+    border-color: #c02a1e;
+    box-shadow: 0 0 0 0.25rem rgba(219, 59, 43, 0.5);
+  }
+
+  &:active {
+    color: #fff;
+    background-color: #b02518;
+    border-color: #b02518;
+  }
+}
+
+.btnSecondary {
+  color: #fff;
+  background-color: #005A8B;
+  border-color: #005A8B;
+
+  &:hover:not(:disabled) {
+    color: #fff;
+    background-color: #004876;
+    border-color: #004876;
+  }
+}
+
+.btnSecondarytelnor {
+  color: #fff;
+  background-color: #00A650;
+  border-color: #00A650;
+
+  &:hover:not(:disabled) {
+    color: #fff;
+    background-color: #008940;
+    border-color: #008940;
+  }
+}
+
+.btnBlock {
+  display: block;
+  width: 100%;
+}
+
+.buttonCard {
+  width: 100%;
+  height: 45px !important;
+  font-size: 14px !important;
+}
+
+// Disclaimer
+.disclaimer {
+  text-align: center;
+  color: white;
+  padding: 15px;
+  margin: 0;
+  font-size: 14px;
+  border-radius: 0 0 12px 12px;
+  width: 100%;
+  font-weight: 600;
+}
+
+// Responsive design
+@media (max-width: 945px) {
+  .textT1comerciosPrincipal {
+    font-size: 24px !important;
+  }
+
+  .formGroup {
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .textT1comerciosPrincipal {
+    font-size: 24px !important;
+  }
+
+  .cardBody {
+    padding: 30px 20px;
+  }
+
+  .cardHome {
+    max-width: 95%;
+    margin: 0 auto;
+  }
+}
+
+// Button responsive heights
+@media (max-width: 576px) {
+  .btnCard {
+    height: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .btnCard {
+    height: 42px;
+  }
+}
+
+@media (min-width: 769px) {
+  .btnCard {
+    height: 45px;
+  }
+}
+
+// Utility classes for animations
+.animate__fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
