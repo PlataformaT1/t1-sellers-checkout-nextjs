@@ -13,7 +13,7 @@
         "@emotion/styled": "^11.13.0",
         "@mui/icons-material": "^7.2.0",
         "@reduxjs/toolkit": "^2.2.7",
-        "@t1-org/t1components": "^4.5.12",
+        "@t1-org/t1components": "^4.5.63",
         "jwt-decode": "^4.0.0",
         "next": "^15.0.0",
         "next-auth": "^5.0.0-beta.29",

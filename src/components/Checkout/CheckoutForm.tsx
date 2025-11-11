@@ -4,7 +4,7 @@ import React, { startTransition, useActionState } from 'react';
 import { useForm } from 'react-hook-form';
 import PricingSummary from './PricingSummary';
 import PaymentMethodForm from './PaymentMethodForm';
-import { CheckoutFormData, CheckoutFormProps, PlanData } from '@/interfaces/checkout';
+import { CheckoutFormData, CheckoutFormProps, PlanData } from '@interfaces/checkout';
 
 export default function CheckoutForm({ searchParams }: CheckoutFormProps) {
   // Get plan data from search params or use defaults
@@ -46,7 +46,7 @@ export default function CheckoutForm({ searchParams }: CheckoutFormProps) {
   });
 
   // TODO: Replace with actual server action
-  const mockCheckoutAction = async (data: CheckoutFormData) => {
+  const mockCheckoutAction = async (prevState: { success: boolean } | undefined, data: CheckoutFormData) => {
     console.log('Checkout data:', data);
     return { success: true };
   };
@@ -62,7 +62,7 @@ export default function CheckoutForm({ searchParams }: CheckoutFormProps) {
   };
 
   return (
-    <div className="bg-white w-full min-h-screen flex items-start justify-center py-[58px] px-4">
+    <div className="bg-white w-full min-h-screen flex items-center justify-center py-[58px] px-4">
       <form
         onSubmit={handleSubmit(submit)}
         className="flex flex-col lg:flex-row gap-[100px] lg:gap-[80px] w-full max-w-[1290px]"

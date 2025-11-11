@@ -1,4 +1,4 @@
-import CheckoutForm from "@/components/Checkout/CheckoutForm";
+import CheckoutForm from "@components/Checkout/CheckoutForm";
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;

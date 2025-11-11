@@ -55,9 +55,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 	return (
 		<React.Suspense>
 			<main>
-				<LayoutMenuComplete>
-					{children}
-				</LayoutMenuComplete>
+				{children}
 			</main>
 		</React.Suspense>
 	);
