@@ -14,6 +14,10 @@
         "@mui/icons-material": "^7.2.0",
         "@reduxjs/toolkit": "^2.2.7",
         "@t1-org/t1components": "^4.5.63",
+        "card-validator": "^10.0.3",
+        "cookies-next": "^6.1.1",
+        "dayjs": "^1.11.19",
+        "fernet": "^0.3.3",
         "jwt-decode": "^4.0.0",
         "next": "^15.0.0",
         "next-auth": "^5.0.0-beta.29",
@@ -24,6 +28,7 @@
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.9",
+        "@types/fernet": "^0.4.3",
         "@types/json5": "^0.0.30",
         "@types/node": "^20.19.4",
         "@types/prop-types": "^15.7.15",

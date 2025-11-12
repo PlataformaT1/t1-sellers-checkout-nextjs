@@ -96,8 +96,8 @@ export default function PaymentMethodForm({
                     rules={{
                       required: 'Requerido',
                       validate: {
-                        isNumeric: (value) => /^\d+$/.test(value) || 'Solo números',
-                        length: (value) => value.length === 16 || 'Número de tarjeta incompleto'
+                        isNumeric: (value) => !value || /^\d+$/.test(value) || 'Solo números',
+                        length: (value) => !value || value.length === 16 || 'Número de tarjeta incompleto'
                       }
                     }}
                     render={({ field: { onChange, value } }) => (
@@ -105,7 +105,7 @@ export default function PaymentMethodForm({
                         label="Datos de tarjeta"
                         textFieldProps={{
                           placeholder: "0000 0000 0000 0000",
-                          value: formatCardNumber(value),
+                          value: formatCardNumber(value || ''),
                           onChange: (e) => onChange(handleCardNumberChange(e.target.value)),
                           onKeyDown: handlePreventPlusMinusKeys,
                           inputMode: 'numeric',
@@ -151,10 +151,10 @@ export default function PaymentMethodForm({
                       rules={{
                         required: 'Requerido',
                         validate: {
-                          isNumeric: (value) => /^\d+$/.test(value) || 'Solo números',
-                          length: (value) => value.length === 4 || 'Fecha de vencimiento incompleta',
+                          isNumeric: (value) => !value || /^\d+$/.test(value) || 'Solo números',
+                          length: (value) => !value || value.length === 4 || 'Fecha de vencimiento incompleta',
                           validMonth: (value) => {
-                            if (value.length >= 2) {
+                            if (value && value.length >= 2) {
                               const month = parseInt(value.slice(0, 2));
                               return (month >= 1 && month <= 12) || 'Mes inválido';
                             }
@@ -166,7 +166,7 @@ export default function PaymentMethodForm({
                         <CustomInput
                           textFieldProps={{
                             placeholder: "MM/AA",
-                            value: formatExpiration(value),
+                            value: formatExpiration(value || ''),
                             onChange: (e) => onChange(handleExpirationChange(e.target.value)),
                             onKeyDown: handlePreventPlusMinusKeys,
                             inputMode: 'numeric',
@@ -202,8 +202,8 @@ export default function PaymentMethodForm({
                         rules={{
                           required: 'Requerido',
                           validate: {
-                            isNumeric: (value) => /^\d+$/.test(value) || 'Solo números',
-                            length: (value) => (value.length === 3 || value.length === 4) || 'CVV incompleto'
+                            isNumeric: (value) => !value || /^\d+$/.test(value) || 'Solo números',
+                            length: (value) => !value || (value.length === 3 || value.length === 4) || 'CVV incompleto'
                           }
                         }}
                         render={({ field: { onChange, value } }) => (

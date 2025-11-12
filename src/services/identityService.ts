@@ -7,7 +7,7 @@ import { getUserAccessCached } from "./userAccessService";
 
 const url = process.env.IDENTITY_URL;
 
-export const request = async <T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', path: string, body?: Record<string, any> | FormData | null): Promise<T> => {
+export const request = async <T>(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET', path: string, body?: Record<string, any> | FormData | null): Promise<T> => {
     const session = await auth() as AuthTokenI;
     
     if (!session) {
@@ -85,4 +85,26 @@ export const createStore = async (storeData: CreateStoreData): Promise<CreateSto
 
 export const verifyStore = async (storeId: number): Promise<StoreVerificationResponse> => {
     return request<StoreVerificationResponse>('GET', `/stores/${storeId}`);
+};
+
+export interface ServiceData {
+    id_seller: number;
+    store_name: string;
+    services: {
+        payments: {
+            payment_id: string;
+        };
+    };
+}
+
+export interface GetServiceResponse {
+    data: ServiceData;
+    metadata: {
+        status: string;
+        message?: string;
+    };
+}
+
+export const getStoreData = async (storeId: number): Promise<GetServiceResponse> => {
+    return request<GetServiceResponse>('GET', `stores/${storeId}`);
 };
