@@ -24,12 +24,10 @@ npm run dev
 | `AUTH_URL` | The base URL for authentication services. |
 | `IDENTITY_URL` | The base URL for the identity service. |
 | `KEYCLOAK_ADMIN_CREDENTIALS` | Contains the admin credentials for Keycloak in JSON format. |
-| `NEXT_PUBLIC_WORKSPACE_URL` | The public URL for the workspace, used for redirects. |
 | `AUTH_SECRET` | A secret key used for session authentication. |
 | `OTP_SERVICE_URL` | The base URL for the One-Time Password (OTP) service. |
-| `NEXT_PUBLIC_STORE_URL` | The public URL for the store. |
-| `NEXT_PUBLIC_PAYMENTS_URL` | The public URL for the payments service. |
-| `NEXT_PUBLIC_SHIPPING_URL` | The public URL for the shipping service. |
+| `NEXT_PUBLIC_T1_ACCOUNT_LINK` | The public URL for the acoount. |
+| `NEXT_PUBLIC_WORKSPACE_URL` | The public URL for the workspace, used for redirects. |
 
 ## Project Structure
 
