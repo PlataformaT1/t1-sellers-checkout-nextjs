@@ -2,6 +2,7 @@
 
 import React, { startTransition, useActionState, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Drawer } from '@mui/material';
 import PricingSummary from './PricingSummary';
 import SavedPaymentMethodForm from './SavedPaymentMethodForm';
 import ErrorDialog from './ErrorDialog';
@@ -72,6 +73,9 @@ export default function CheckoutForm({
   // Error dialog state
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Mobile "Ver detalle" dropdown state
+  const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
 
   // Action state for card creation
   const [createCardState, createCardAction, createCardPending] = useActionState(createPaymentCardAction, undefined);
@@ -343,9 +347,12 @@ export default function CheckoutForm({
 
   return (
     <>
-      <div className="bg-white w-full min-h-screen flex flex-col lg:flex-row lg:items-center lg:justify-center py-0 lg:py-[58px] px-0 lg:px-4">
+      <div className="w-full min-h-screen flex flex-col lg:flex-row lg:items-center lg:justify-center py-0 lg:py-[58px] px-0 lg:px-4">
         {/* Mobile Header - only on mobile */}
-        <MobileHeader />
+        <MobileHeader
+          isOpen={mobileDetailsOpen}
+          onToggle={() => setMobileDetailsOpen(!mobileDetailsOpen)}
+        />
 
         <form
           onSubmit={handleSubmit(submit)}
@@ -375,6 +382,64 @@ export default function CheckoutForm({
         {/* Mobile Footer - only on mobile */}
         <MobileFooter />
       </div>
+
+      {/* Mobile Price Breakdown Drawer - only on mobile */}
+      <Drawer
+        anchor="top"
+        open={mobileDetailsOpen}
+        onClose={() => setMobileDetailsOpen(false)}
+        sx={{
+          display: { xs: 'block', lg: 'none' },
+          '& .MuiDrawer-paper': {
+            borderBottomLeftRadius: '20px',
+            borderBottomRightRadius: '20px',
+            borderTopLeftRadius: '0',
+            borderTopRightRadius: '0',
+            maxHeight: '50vh'
+          }
+        }}
+      >
+        <div className="bg-white w-full">
+          {/* Header replica with logo and Ver detalle button */}
+          <MobileHeader
+            isOpen={mobileDetailsOpen}
+            onToggle={() => setMobileDetailsOpen(false)}
+          />
+
+          <div className="px-[20px] py-[20px] flex flex-col gap-[12px]">
+            {/* Subtotal */}
+            <div className="flex items-center justify-between text-[#4c4c4c] text-[12px]">
+              <p className="font-normal leading-[normal]">Subtotal</p>
+              <p className="font-semibold leading-[30px] text-right">${planData.subtotal.toFixed(2)}</p>
+            </div>
+            <div className="h-px w-full bg-[#e7e7e7]" />
+
+            {/* Credit line - only show for upgrades/downgrades */}
+            {planData.credit && (
+              <>
+                <div className="flex items-center justify-between text-[#4c4c4c] text-[12px]">
+                  <p className="font-normal leading-[normal]">{planData.credit.label}</p>
+                  <p className="font-semibold leading-[30px] text-right">${planData.credit.amount.toFixed(2)}</p>
+                </div>
+                <div className="h-px w-full bg-[#e7e7e7]" />
+              </>
+            )}
+
+            {/* Impuestos (IVA) */}
+            <div className="flex items-center justify-between text-[#4c4c4c] text-[12px]">
+              <p className="font-normal leading-[normal]">Impuestos (IVA)</p>
+              <p className="font-semibold leading-[30px] text-right">${planData.tax.toFixed(2)}</p>
+            </div>
+            <div className="h-px w-full bg-[#e7e7e7]" />
+
+            {/* Total */}
+            <div className="flex items-center justify-between text-[#4c4c4c] text-[14px] font-bold">
+              <p className="leading-[normal]">Total</p>
+              <p className="leading-[30px] text-right">${planData.total.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+      </Drawer>
 
       {/* Error Dialog */}
       <ErrorDialog
