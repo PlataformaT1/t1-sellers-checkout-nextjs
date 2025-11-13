@@ -11,6 +11,11 @@ const accountRedirectUrl = `${process.env.NEXT_PUBLIC_T1_ACCOUNT_LINK}{SHOPID}&r
 const keycloakConfig = JSON.parse(`${process.env.KEYCLOAK}`);
 const retries = 5;
 
+// Helper function to get full callback URL from request
+function getFullCallbackUrl(request: NextRequest): string {
+	return request.nextUrl.pathname + request.nextUrl.search;
+}
+
 export async function middleware(request: NextRequest) {
 	try {
 		if (request.url.includes('MissingCSRF')) return NextResponse.redirect(redirectUrl);
@@ -64,7 +69,7 @@ export async function middleware(request: NextRequest) {
 					const hasAccess: any[] = responseData?.data?.has_access;
 
 					if (!hasAccess) {
-						const url = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent('/?store=' + storeId)}`;
+						const url = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent(getFullCallbackUrl(request))}`;
 						const response = NextResponse.redirect(url);
 
 						response.cookies.set('store', '', {
@@ -86,48 +91,19 @@ export async function middleware(request: NextRequest) {
 					return response;
 				} catch (error) {
 					console.error('Token validation failed:', error);
-					const signInUrl = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent('/?store=' + storeId)}`;
+					const signInUrl = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent(getFullCallbackUrl(request))}`;
 					return NextResponse.redirect(signInUrl);
 				}
 			}
 		}
 
 		if (request.nextUrl.pathname === '/' && (!request.nextUrl.searchParams.get('store') || request.nextUrl.searchParams.get('store') === 'null')) {
-			const redirected = (await cookies()).get('redirected');
-
-			if (!session) {
-				if (request.nextUrl.searchParams.get('code')) {
-					console.log('Redirecting to sign in');
-					const signInUrl = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent('/')}`;
-					return NextResponse.redirect(signInUrl);
-				}
-				if (!redirected) {
-					const url = `${keycloakConfig.url}/realms/${keycloakConfig.realm}/protocol/openid-connect/auth?client_id=${keycloakConfig.clientId}&redirect_uri=${encodeURIComponent(`${process.env.AUTH_URL}/`)}&response_type=code&scope=openid&prompt=none`;
-					const response = NextResponse.redirect(url);
-					response.cookies.set('redirected', 'true', {
-						httpOnly: true,
-						path: '/',
-						maxAge: 5
-					});
-
-					return response;
-				}
-			}
-			if (session) {
-				const homeUrl = `${process.env.AUTH_URL}`;
-
-				if (store) {
-					return NextResponse.redirect(`${homeUrl}/?store=${store.value}`);
-				}
-
-				return NextResponse.redirect(redirectUrl);
-			}
-
-			return NextResponse.next();
+			// Show invalid access page for root URL without proper params
+			return NextResponse.rewrite(new URL('/invalid-access', request.url));
 		}
 
 		if (!session || session.error) {
-			const signInUrl = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent('/?store=' + storeId)}`;
+			const signInUrl = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent(getFullCallbackUrl(request))}`;
 			let response = NextResponse.redirect(signInUrl);
 
 			response.cookies.set('store', storeId, {
@@ -170,7 +146,7 @@ export async function middleware(request: NextRequest) {
 		const maxRetries = 2;
 
 		if (!hasAccess && currentRetries < maxRetries) {
-			const url = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent('/?store=' + storeId)}`;
+			const url = `${process.env.AUTH_URL}/auth/signIn?callbackUrl=${encodeURIComponent(getFullCallbackUrl(request))}`;
 			const response = NextResponse.redirect(url);
 
 			response.cookies.set('retried', (currentRetries + 1).toString(), {
@@ -188,7 +164,7 @@ export async function middleware(request: NextRequest) {
 	} catch (error: any) {
 		let url = process.env.AUTH_URL + '/auth/signOut';
 		if (error && (error === 'Failed to refresh token' || error.error === 'invalid_grant') && request.nextUrl.searchParams.get('store')) {
-			url = process.env.AUTH_URL + `/auth/signIn?callbackUrl=${encodeURIComponent('/?store=' + request.nextUrl.searchParams.get('store'))}`;
+			url = process.env.AUTH_URL + `/auth/signIn?callbackUrl=${encodeURIComponent(getFullCallbackUrl(request))}`;
 		}
 		if (error && error.error === 'corrupt_grant' || error.error === 'failed_retries') {
 			const session = await auth() as AuthTokenI;
