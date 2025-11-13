@@ -210,7 +210,7 @@ export default function SavedPaymentMethodForm({
 
   return (
     <div className="content-stretch flex flex-col lg:h-[655px] items-center justify-between relative w-full lg:w-[400px]">
-      <div className="content-stretch flex flex-col gap-[32px] items-center justify-end relative shrink-0 w-full">
+      <div className="content-stretch flex flex-col gap-[25px] items-center justify-end relative shrink-0 w-full">
         <div className="content-stretch flex flex-col gap-[15px] items-start relative shrink-0 w-full">
           <p className="font-semibold leading-[normal] relative shrink-0 text-[#4c4c4c] text-[20px] text-nowrap whitespace-pre">
             Método de pago
@@ -639,7 +639,7 @@ export default function SavedPaymentMethodForm({
                 render={({ field: { value: showBilling } }) => (
                   <>
                     {showBilling && (
-                      <div className="box-border content-stretch flex flex-col gap-[10px] items-start pb-[10px] pt-0 px-0 relative shrink-0 w-full">
+                      <div className="box-border content-stretch flex flex-col gap-[10px] items-start md:pb-[10px] pt-0 px-0 relative shrink-0 w-full">
                       {/* Nombre o razón social */}
                       <div className="content-stretch flex flex-col items-start justify-center relative shrink-0 w-full">
                         <Controller
@@ -758,7 +758,7 @@ export default function SavedPaymentMethodForm({
                                 }}
                               >
                                 <MenuItem value="">
-                                  {loadingRegimenes ? 'Cargando...' : regimenesFiscales.length === 0 ? 'Primero ingresa el RFC' : 'Régimen fiscal'}
+                                  {loadingRegimenes ? 'Cargando...' : 'Régimen fiscal'}
                                 </MenuItem>
                                 {regimenesFiscales.map((regimen) => (
                                   <MenuItem key={regimen.clave} value={regimen.clave}>
@@ -848,7 +848,7 @@ export default function SavedPaymentMethodForm({
                               }}
                             >
                               <MenuItem value="">
-                                {loadingUsos ? 'Cargando...' : usosCFDI.length === 0 ? 'Primero selecciona régimen fiscal' : 'Uso de CFDI'}
+                                {loadingUsos ? 'Cargando...' : 'Uso de CFDI'}
                               </MenuItem>
                               {usosCFDI.map((uso) => (
                                 <MenuItem key={uso.clave} value={uso.clave}>
