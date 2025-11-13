@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import PricingSummary from './PricingSummary';
 import SavedPaymentMethodForm from './SavedPaymentMethodForm';
 import ErrorDialog from './ErrorDialog';
+import MobileHeader from './MobileHeader';
+import MobileFooter from './MobileFooter';
 import { CheckoutFormData, CheckoutFormProps, PlanData, SavedCard } from '@interfaces/checkout';
 import { createPaymentCardAction } from '@services/paymentMethodsService';
 import { createSubscriptionAction } from '@services/subscriptionService';
@@ -341,19 +343,22 @@ export default function CheckoutForm({
 
   return (
     <>
-      <div className="bg-white w-full min-h-screen flex items-center justify-center py-[58px] px-4">
+      <div className="bg-white w-full min-h-screen flex flex-col lg:flex-row lg:items-center lg:justify-center py-0 lg:py-[58px] px-0 lg:px-4">
+        {/* Mobile Header - only on mobile */}
+        <MobileHeader />
+
         <form
           onSubmit={handleSubmit(submit)}
-          className="flex flex-col lg:flex-row gap-[100px] lg:gap-[80px] w-full max-w-[1290px]"
+          className="flex flex-col lg:flex-row gap-[24px] lg:gap-[80px] w-full lg:max-w-[1290px] flex-1"
         >
-          {/* Left Panel - Pricing Summary */}
-          <div className="flex-1 flex justify-center lg:justify-end">
+          {/* Left Panel - Pricing Summary (Desktop) / Plan Info (Mobile) */}
+          <div className="flex justify-center lg:justify-end px-[14px] lg:px-0 pt-[12px] pb-[20px] lg:pt-0 border-b border-[#e7e7e7] lg:border-b-0">
             <PricingSummary planData={planData} />
           </div>
 
           {/* Right Panel - Payment Form */}
-          <div className="flex-1 flex justify-center lg:justify-start">
-            <div className="bg-white rounded-[10px] shadow-[0px_0px_5px_1px_rgba(0,0,0,0.1)] p-[39px_79px] flex items-center justify-center">
+          <div className="flex-1 flex justify-center lg:justify-end ">
+            <div className="lg:rounded-[10px] lg:shadow-[0px_0px_5px_1px_rgba(0,0,0,0.1)] p-[0px_20px] md:p-[12px_20px] lg:p-[39px_79px] flex md:items-center justify-center w-full lg:w-auto">
               <SavedPaymentMethodForm
                 control={control}
                 errors={errors}
@@ -366,6 +371,9 @@ export default function CheckoutForm({
             </div>
           </div>
         </form>
+
+        {/* Mobile Footer - only on mobile */}
+        <MobileFooter />
       </div>
 
       {/* Error Dialog */}

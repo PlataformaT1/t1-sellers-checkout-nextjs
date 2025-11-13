@@ -209,7 +209,7 @@ export default function SavedPaymentMethodForm({
   };
 
   return (
-    <div className="content-stretch flex flex-col h-[655px] items-center justify-between relative w-[400px]">
+    <div className="content-stretch flex flex-col lg:h-[655px] items-center justify-between relative w-full lg:w-[400px]">
       <div className="content-stretch flex flex-col gap-[32px] items-center justify-end relative shrink-0 w-full">
         <div className="content-stretch flex flex-col gap-[15px] items-start relative shrink-0 w-full">
           <p className="font-semibold leading-[normal] relative shrink-0 text-[#4c4c4c] text-[20px] text-nowrap whitespace-pre">
@@ -889,8 +889,8 @@ export default function SavedPaymentMethodForm({
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="content-stretch flex flex-col gap-[8px] items-center relative shrink-0 w-[380px]">
+      {/* Footer - Desktop only */}
+      <div className="hidden lg:flex content-stretch flex-col gap-[8px] items-center relative shrink-0 w-full lg:w-[380px]">
         <div className="flex gap-[5px] items-center">
           <p className="font-medium leading-[normal] text-[#828282] text-[10px] text-nowrap m-0">
             Con tecnología de

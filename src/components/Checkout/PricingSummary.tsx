@@ -12,20 +12,24 @@ interface PricingSummaryProps {
 
 export default function PricingSummary({ planData }: PricingSummaryProps) {
   return (
-    <div className="content-stretch flex flex-col gap-[35px] items-start relative shrink-0">
-      <T1StoreLogo />
+    <div className="content-stretch flex flex-col gap-[20px] lg:gap-[35px] items-start lg:items-start items-center relative shrink-0">
+      {/* Logo - only show on desktop */}
+      <div className="hidden lg:block">
+        <T1StoreLogo />
+      </div>
 
-      <div className="box-border content-stretch flex flex-col gap-[15px] items-start pb-[11px] pt-0 px-0 relative shrink-0 w-[358px]">
-        <div className="content-stretch flex gap-[15px] items-start relative shrink-0 w-full">
-          <div className="basis-0 content-stretch flex flex-col gap-[4px] grow items-start min-h-px min-w-px relative shrink-0">
-            <p className="font-normal leading-[normal] relative shrink-0 text-[16px] text-black text-nowrap whitespace-pre">
+      {/* Plan Info - responsive layout */}
+      <div className="box-border content-stretch flex flex-col gap-[15px] items-center lg:items-start md:pb-[20px] lg:pb-[11px] pt-0 px-0 relative shrink-0 w-full lg:w-[358px]">
+        <div className="content-stretch flex gap-[15px] items-center lg:items-start justify-center lg:justify-start relative shrink-0 w-full">
+          <div className="basis-0 content-stretch flex flex-col gap-[4px] grow items-center lg:items-start min-h-px min-w-px relative shrink-0">
+            <p className="font-normal lg:font-normal leading-[normal] relative shrink-0 text-[16px] text-black text-nowrap whitespace-pre">
               {planData.name}
             </p>
-            <div className="content-stretch flex gap-[15px] items-center relative shrink-0 w-full">
-              <p className="font-bold leading-[normal] relative shrink-0 text-[#4c4c4c] text-[48px] text-nowrap whitespace-pre">
+            <div className="content-stretch flex gap-[8px] lg:gap-[15px] items-center relative shrink-0 w-full justify-center lg:justify-start">
+              <p className="font-bold leading-[normal] relative shrink-0 text-[#4c4c4c] text-[36px] lg:text-[48px] text-nowrap whitespace-pre">
                 ${planData.price.toFixed(2)}
               </p>
-              <div className="flex flex-col font-medium h-[50px] justify-end leading-[0] relative shrink-0 text-[20px] text-[#4c4c4c] w-[105px]">
+              <div className="flex flex-col font-medium h-[38px] lg:h-[50px] justify-end leading-[0] relative shrink-0 text-[17px] lg:text-[20px] text-[#4c4c4c] w-[105px]">
                 <p className="leading-[normal]">{planData.currency} / {planData.period}</p>
               </div>
             </div>
@@ -33,31 +37,34 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
         </div>
       </div>
 
-      {/* Downgrade Notice - only show for downgrades */}
-      {planData.downgradeNotice && (
-        <div className="bg-[rgba(33,128,255,0.1)] box-border content-stretch flex gap-[12px] items-center p-[10px] relative rounded-[10px] shrink-0 w-full">
-          <div className="basis-0 content-stretch flex gap-[8px] grow items-center min-h-px min-w-px relative shrink-0">
-            <div className="overflow-clip relative shrink-0 size-[24px]">
-              <Image
-                src={imgInfoIcon}
-                alt="info"
-                width={24}
-                height={24}
-                className="block max-w-none size-full"
-              />
+      {/* Desktop only - Downgrade Notice and Breakdown */}
+      <div className="hidden lg:flex flex-col gap-[35px] w-full">
+        {/* Downgrade Notice - only show for downgrades */}
+        {planData.downgradeNotice && (
+          <div className="bg-[rgba(33,128,255,0.1)] box-border content-stretch flex gap-[12px] items-center p-[10px] relative rounded-[10px] shrink-0 w-full">
+            <div className="basis-0 content-stretch flex gap-[8px] grow items-center min-h-px min-w-px relative shrink-0">
+              <div className="overflow-clip relative shrink-0 size-[24px]">
+                <Image
+                  src={imgInfoIcon}
+                  alt="info"
+                  width={24}
+                  height={24}
+                  className="block max-w-none size-full"
+                />
+              </div>
+              <p className="basis-0 font-medium grow leading-[normal] min-h-px min-w-px relative shrink-0 text-[12px] text-[#2180ff]">
+                <span>Tu suscripción a {planData.downgradeNotice.newPlanName} por </span>
+                <span className="font-bold">${planData.downgradeNotice.newPlanPrice.toFixed(2)}</span>
+                <span> aplicará a partir del </span>
+                <span className="font-bold">{planData.downgradeNotice.effectiveDate}</span>
+                <span>, hasta entonces mantendrás tu {planData.downgradeNotice.currentPlanName}</span>
+              </p>
             </div>
-            <p className="basis-0 font-medium grow leading-[normal] min-h-px min-w-px relative shrink-0 text-[12px] text-[#2180ff]">
-              <span>Tu suscripción a {planData.downgradeNotice.newPlanName} por </span>
-              <span className="font-bold">${planData.downgradeNotice.newPlanPrice.toFixed(2)}</span>
-              <span> aplicará a partir del </span>
-              <span className="font-bold">{planData.downgradeNotice.effectiveDate}</span>
-              <span>, hasta entonces mantendrás tu {planData.downgradeNotice.currentPlanName}</span>
-            </p>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+        {/* Price Breakdown */}
+        <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
         <div className="h-px relative shrink-0 w-[442.827px]">
           <div className="absolute inset-0">
             <img alt="" className="block max-w-none size-full" src={imgHr} />
@@ -114,6 +121,7 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
           <p className="leading-[30px] relative shrink-0 text-right w-[88.167px]">
             ${planData.total.toFixed(2)}
           </p>
+        </div>
         </div>
       </div>
     </div>
