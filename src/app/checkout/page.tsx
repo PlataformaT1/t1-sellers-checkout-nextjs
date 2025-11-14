@@ -114,10 +114,12 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
     }
 
     const isAnnual = searchParams.cycle === 'annual';
-    const price = isAnnual ? countryData.price_annual : countryData.price_monthly;
-    const subtotal = price;
-    const tax = subtotal * countryData.tax_rate;
-    const total = subtotal + tax;
+    const finalPrice = isAnnual ? countryData.price_annual : countryData.price_monthly;
+
+    // API price already includes 16% IVA - reverse calculate
+    const total = finalPrice;
+    const subtotal = finalPrice / 1.16;  // Remove 16% tax to get base price
+    const tax = total - subtotal;        // Tax is the difference
 
     planData = {
       id: plan.plan_id,
