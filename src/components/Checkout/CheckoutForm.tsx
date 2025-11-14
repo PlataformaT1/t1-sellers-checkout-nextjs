@@ -10,7 +10,7 @@ import MobileHeader from './MobileHeader';
 import MobileFooter from './MobileFooter';
 import { CheckoutFormData, CheckoutFormProps, PlanData, SavedCard } from '@interfaces/checkout';
 import { createPaymentCardAction } from '@services/paymentMethodsService';
-import { createSubscriptionAction } from '@services/subscriptionService';
+import { createSubscriptionAction, upgradeSubscriptionAction } from '@services/subscriptionService';
 import { PaymentMethod } from '@interfaces/paymentMethods';
 import { saveFiscalDataAction } from '@services/fiscalDataService';
 
@@ -20,6 +20,7 @@ export default function CheckoutForm({
   paymentCards,
   fiscalData,
   planData: fetchedPlanData,
+  currentSubscription,
   userId,
   redirectUrl,
   userEmail = '',
@@ -36,7 +37,8 @@ export default function CheckoutForm({
         tax: fetchedPlanData.tax,
         total: fetchedPlanData.total,
         currency: fetchedPlanData.currency,
-        period: fetchedPlanData.period
+        period: fetchedPlanData.period,
+        ...(fetchedPlanData.downgradeNotice && { downgradeNotice: fetchedPlanData.downgradeNotice })
       };
     }
 
@@ -66,7 +68,7 @@ export default function CheckoutForm({
 
   // State to track pending operations after fiscal data save
   const [pendingAfterFiscalSave, setPendingAfterFiscalSave] = useState<{
-    type: 'subscription' | 'card-then-subscription' | null;
+    type: 'subscription' | 'card-then-subscription' | 'upgrade' | null;
     data: CheckoutFormData | null;
   }>({ type: null, data: null });
 
@@ -83,6 +85,12 @@ export default function CheckoutForm({
   // Action state for subscription
   const [subscriptionState, subscriptionAction, subscriptionPending] = useActionState(
     createSubscriptionAction,
+    undefined
+  );
+
+  // Action state for upgrade subscription
+  const [upgradeState, upgradeAction, upgradePending] = useActionState(
+    upgradeSubscriptionAction,
     undefined
   );
 
@@ -193,6 +201,20 @@ export default function CheckoutForm({
     }
   }, [subscriptionState, redirectUrl]);
 
+  // Handle upgrade success - redirect
+  useEffect(() => {
+    if (upgradeState?.success) {
+      console.log('Subscription upgraded successfully! Redirecting...');
+      // Redirect to the success URL
+      window.location.href = redirectUrl;
+    } else if (upgradeState && !upgradeState.success) {
+      console.error('Failed to upgrade subscription:', upgradeState.error);
+      // Show error dialog
+      setErrorMessage(upgradeState.error || 'Error al actualizar la suscripción. Por favor, intenta nuevamente.');
+      setErrorDialogOpen(true);
+    }
+  }, [upgradeState, redirectUrl]);
+
   // Handle fiscal data save success - proceed with subscription/card creation
   useEffect(() => {
     if (saveFiscalDataState?.success && pendingAfterFiscalSave.type && pendingAfterFiscalSave.data) {
@@ -200,7 +222,17 @@ export default function CheckoutForm({
 
       const data = pendingAfterFiscalSave.data;
 
-      if (pendingAfterFiscalSave.type === 'subscription' && data.savedCardId) {
+      if (pendingAfterFiscalSave.type === 'upgrade' && currentSubscription) {
+        // Upgrade subscription
+        startTransition(() => {
+          upgradeAction({
+            subscriptionId: currentSubscription.id,
+            currentPlanId: currentSubscription.plan_id,
+            newPlanId: fetchedPlanData!.id,
+            billingCycle: fetchedPlanData!.cycle
+          });
+        });
+      } else if (pendingAfterFiscalSave.type === 'subscription' && data.savedCardId) {
         // Create subscription with saved card
         startTransition(() => {
           subscriptionAction({
@@ -266,6 +298,17 @@ export default function CheckoutForm({
       return;
     }
 
+    // Detect if this is an upgrade/downgrade
+    const isUpgradeOrDowngrade = currentSubscription &&
+      (currentSubscription.plan_id !== fetchedPlanData.id ||
+       currentSubscription.billing_cycle !== fetchedPlanData.cycle);
+
+    console.log('Is upgrade/downgrade:', isUpgradeOrDowngrade);
+    if (isUpgradeOrDowngrade) {
+      console.log('Current plan:', currentSubscription.plan_id, currentSubscription.billing_cycle);
+      console.log('New plan:', fetchedPlanData.id, fetchedPlanData.cycle);
+    }
+
     // Check if user checked the "Añadir datos de facturación" checkbox
     // Only save fiscal data if checkbox is checked AND user doesn't already have it
     const needToSaveFiscalData = data.addBillingInfo === true &&
@@ -276,8 +319,12 @@ export default function CheckoutForm({
       console.log('Saving fiscal data first...');
 
       // Determine what to do after fiscal data is saved
-      const nextAction: 'subscription' | 'card-then-subscription' =
-        data.savedCardId ? 'subscription' : 'card-then-subscription';
+      let nextAction: 'subscription' | 'card-then-subscription' | 'upgrade';
+      if (isUpgradeOrDowngrade) {
+        nextAction = 'upgrade';
+      } else {
+        nextAction = data.savedCardId ? 'subscription' : 'card-then-subscription';
+      }
 
       setPendingAfterFiscalSave({ type: nextAction, data });
 
@@ -297,20 +344,33 @@ export default function CheckoutForm({
       return;
     }
 
-    // If using saved card, create subscription immediately
+    // If using saved card, create subscription or upgrade immediately
     if (data.savedCardId) {
-      startTransition(() => {
-        subscriptionAction({
-          userId: userId,
-          shopId: sellerId,
-          planId: fetchedPlanData.id,
-          customerId: paymentId,
-          paymentId: data.savedCardId!,
-          planName: fetchedPlanData.name,
-          billingCycle: fetchedPlanData.cycle,
-          currency: fetchedPlanData.currency
+      if (isUpgradeOrDowngrade && currentSubscription) {
+        // Call upgrade endpoint
+        startTransition(() => {
+          upgradeAction({
+            subscriptionId: currentSubscription.id,
+            currentPlanId: currentSubscription.plan_id,
+            newPlanId: fetchedPlanData.id,
+            billingCycle: fetchedPlanData.cycle
+          });
         });
-      });
+      } else {
+        // Call regular subscription endpoint
+        startTransition(() => {
+          subscriptionAction({
+            userId: userId,
+            shopId: sellerId,
+            planId: fetchedPlanData.id,
+            customerId: paymentId,
+            paymentId: data.savedCardId!,
+            planName: fetchedPlanData.name,
+            billingCycle: fetchedPlanData.cycle,
+            currency: fetchedPlanData.currency
+          });
+        });
+      }
       return;
     }
 
@@ -370,7 +430,7 @@ export default function CheckoutForm({
                 control={control}
                 errors={errors}
                 isValid={isValid}
-                isPending={createCardPending || subscriptionPending || saveFiscalDataPending}
+                isPending={createCardPending || subscriptionPending || upgradePending || saveFiscalDataPending}
                 onSubmit={handleSubmit(submit)}
                 savedCards={savedCards}
                 savedBillingInfo={fiscalData?.mappedBillingInfo || null}

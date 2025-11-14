@@ -106,3 +106,23 @@ export interface CreateSubscriptionResponse {
   error?: string;
   message?: string;
 }
+
+// Current Subscription interfaces
+export interface CurrentSubscription {
+  id: string;
+  plan_id: string;
+  plan_name?: string;
+  billing_cycle: string;
+  status: string;
+  trial_ends_at?: string;
+  current_period_end?: string;
+  created_at?: string;
+}
+
+export interface CurrentSubscriptionResponse {
+  data: {
+    plan: SubscriptionPlan;
+    subscription: CurrentSubscription;
+  };
+  metaData?: PlanMetadata;
+}

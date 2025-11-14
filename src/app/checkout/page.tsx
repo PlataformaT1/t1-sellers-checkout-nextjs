@@ -3,7 +3,7 @@ import CheckoutError from "@components/Checkout/CheckoutError";
 import { getStoreData } from "@services/identityService";
 import { getPaymentCards } from "@services/paymentMethodsService";
 import { getFiscalData } from "@services/walletService";
-import { getPlanById } from "@services/subscriptionService";
+import { getPlanById, getCurrentSubscription } from "@services/subscriptionService";
 import { auth } from "@auth";
 import { AuthTokenI } from "@interfaces/props";
 import { getUserAccessCached } from "@services/userAccessService";
@@ -84,6 +84,7 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
   let fiscalData = null;
   let planData = null;
   let userId = null;
+  let currentSubscription = null;
 
   try {
     // Fetch plan data
@@ -133,21 +134,82 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
 
     // Fetch service data to get payment ID
     if (storeId) {
-      const userResponse = await getUserAccessCached(session.access_token, storeId?.toString(), session.user.email);
+      // Parallelize independent API calls for better performance
+      const [userResponse, serviceResponse, currentSubResponse] = await Promise.all([
+        getUserAccessCached(session.access_token, storeId?.toString(), session.user.email),
+        getStoreData(storeId),
+        getCurrentSubscription(storeId)
+      ]);
+
       userId = userResponse?.data?.user_id || null;
-      
-      const serviceResponse = await getStoreData(storeId);
       serviceData = serviceResponse.data;
 
-      // Fetch payment cards if we have a payment ID
+      // Parallelize dependent API calls (require serviceData)
+      const promises: Promise<{ type: string; data: any }>[] = [];
+
       if (serviceData?.services?.payments?.payment_id) {
-        const cardsResponse = await getPaymentCards(serviceData.services.payments.payment_id);
-        paymentCards = cardsResponse.data || [];
+        promises.push(
+          getPaymentCards(serviceData.services.payments.payment_id)
+            .then(res => ({ type: 'cards', data: res }))
+        );
       }
 
-      // Fetch fiscal data for billing information
       if (serviceData?.id_seller) {
-        fiscalData = await getFiscalData(serviceData.id_seller);
+        promises.push(
+          getFiscalData(serviceData.id_seller)
+            .then(res => ({ type: 'fiscal', data: res }))
+        );
+      }
+
+      // Wait for all dependent calls to complete
+      if (promises.length > 0) {
+        const results = await Promise.all(promises);
+        const cardsResult = results.find(r => r.type === 'cards');
+        const fiscalResult = results.find(r => r.type === 'fiscal');
+
+        if (cardsResult) {
+          paymentCards = cardsResult.data.data || [];
+        }
+        if (fiscalResult) {
+          fiscalData = fiscalResult.data;
+        }
+      }
+
+      // Process current subscription response
+      if (currentSubResponse?.data?.subscription) {
+        currentSubscription = currentSubResponse.data.subscription;
+
+        // Get current plan pricing based on billing cycle
+        const currentPlan = currentSubResponse.data.plan;
+        const currentCountryData = currentPlan?.country_availability?.find((c: { country_code: string }) => c.country_code === 'MX');
+
+        if (currentCountryData) {
+          // Get current plan price based on billing cycle
+          const currentPlanPrice = currentSubscription.billing_cycle === 'annual'
+            ? currentCountryData.price_annual
+            : currentCountryData.price_monthly;
+
+          // Check if this is a downgrade (current plan price > new plan price)
+          if (currentPlanPrice > planData.subtotal) {
+            // Format the effective date from current_period_end
+            let effectiveDate = '';
+            if (currentSubscription.current_period_end) {
+              const date = new Date(currentSubscription.current_period_end);
+              const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
+              effectiveDate = date.toLocaleDateString('es-ES', options);
+            }
+
+            planData = {
+              ...planData,
+              downgradeNotice: {
+                newPlanName: planData.name,
+                newPlanPrice: planData.subtotal,
+                effectiveDate: effectiveDate,
+                currentPlanName: currentPlan.display_name || 'plan actual'
+              }
+            };
+          }
+        }
       }
     }
   } catch (error) {
@@ -167,6 +229,7 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
       paymentCards={paymentCards}
       fiscalData={fiscalData}
       planData={planData}
+      currentSubscription={currentSubscription}
       userId={userId}
       redirectUrl={searchParams.redirect}
       userEmail={session?.user?.email || ''}

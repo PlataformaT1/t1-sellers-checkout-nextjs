@@ -1,4 +1,5 @@
 import { GetFiscalDataResponse } from "@services/walletService";
+import { CurrentSubscription } from "./subscription";
 
 export interface CheckoutFormData {
   // Card payment fields (for new card)
@@ -52,6 +53,12 @@ export interface FetchedPlanData {
   period: string;
   cycle: string;
   trialDays?: number;
+  downgradeNotice?: {
+    newPlanName: string;
+    newPlanPrice: number;
+    effectiveDate: string;
+    currentPlanName: string;
+  };
 }
 
 export interface CheckoutFormProps {
@@ -73,6 +80,7 @@ export interface CheckoutFormProps {
   paymentCards?: any[] | null;
   fiscalData?: GetFiscalDataResponse | null;
   planData?: FetchedPlanData | null;
+  currentSubscription?: CurrentSubscription | null;
   userId: number | null;
   redirectUrl: string;
   userEmail?: string;

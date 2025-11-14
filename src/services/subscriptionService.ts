@@ -1,6 +1,6 @@
 'use server';
 
-import { GetPlanResponse, CreateSubscriptionRequest, CreateSubscriptionResponse } from "@interfaces/subscription";
+import { GetPlanResponse, CreateSubscriptionRequest, CreateSubscriptionResponse, CurrentSubscriptionResponse } from "@interfaces/subscription";
 
 const url = process.env.SUBSCRIPTION_URL;
 
@@ -24,6 +24,35 @@ export const getPlanById = async (planId: string): Promise<GetPlanResponse | nul
     return response.json();
   } catch (error) {
     console.error('Error fetching plan data:', error);
+    return null;
+  }
+};
+
+export const getCurrentSubscription = async (shopId: number): Promise<CurrentSubscriptionResponse | null> => {
+  try {
+    const response = await fetch(`${url}/suscriptions/subscriptions/by-shop/${shopId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    console.log('CURRENT SUBSCRIPTION URL', `${url}/suscriptions/subscriptions/by-shop/${shopId}`);
+
+    if (!response.ok) {
+      // If no subscription found (404), return null instead of throwing
+      if (response.status === 404) {
+        console.log('No current subscription found for shop:', shopId);
+        return null;
+      }
+      const error = await response.json();
+      console.error('Error fetching current subscription:', error);
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error fetching current subscription:', error);
     return null;
   }
 };
@@ -103,6 +132,71 @@ export const createSubscriptionAction = async (
     return {
       success: false,
       error: 'Error al crear la suscripción. Por favor, intenta nuevamente.'
+    };
+  }
+};
+
+export const upgradeSubscriptionAction = async (
+  prevState: CreateSubscriptionState | undefined,
+  formData: {
+    subscriptionId: string;
+    currentPlanId: string;
+    newPlanId: string;
+    billingCycle: string;
+  }
+): Promise<CreateSubscriptionState> => {
+  try {
+    // Map billing cycle to recurring interval
+    const intervalMap: { [key: string]: string } = {
+      'monthly': 'month',
+      'annual': 'year'
+    };
+
+    const requestBody = {
+      current_plan_id: formData.currentPlanId,
+      new_plan_id: formData.newPlanId,
+      recurring: {
+        duration: 1,
+        interval: intervalMap[formData.billingCycle] || 'month'
+      }
+    };
+
+    console.log('Upgrading subscription with:', requestBody);
+
+    const response = await fetch(`${url}/suscriptions/subscriptions/${formData.subscriptionId}/upgrade-plan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('SUBSCRIPTION UPGRADE URL', `${url}/suscriptions/subscriptions/${formData.subscriptionId}/upgrade-plan`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Error upgrading subscription:', error);
+
+      // Extract error message from API response structure
+      const errorMessage = error?.metaData?.message || error?.message || 'Error al actualizar la suscripción';
+
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      message: result.message || 'Suscripción actualizada exitosamente'
+    };
+  } catch (error) {
+    console.error('Error upgrading subscription:', error);
+    return {
+      success: false,
+      error: 'Error al actualizar la suscripción. Por favor, intenta nuevamente.'
     };
   }
 };
