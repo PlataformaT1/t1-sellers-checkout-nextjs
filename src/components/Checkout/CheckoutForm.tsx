@@ -10,7 +10,7 @@ import MobileHeader from './MobileHeader';
 import MobileFooter from './MobileFooter';
 import { CheckoutFormData, CheckoutFormProps, PlanData, SavedCard } from '@interfaces/checkout';
 import { createPaymentCardAction } from '@services/paymentMethodsService';
-import { createSubscriptionAction, upgradeSubscriptionAction } from '@services/subscriptionService';
+import { createSubscriptionAction, upgradeSubscriptionAction, updateSubscriptionPaymentMethodAction } from '@services/subscriptionService';
 import { PaymentMethod } from '@interfaces/paymentMethods';
 import { saveFiscalDataAction } from '@services/fiscalDataService';
 
@@ -94,6 +94,17 @@ export default function CheckoutForm({
     undefined
   );
 
+  // Action state for payment method update
+  const [updatePaymentState, updatePaymentAction, updatePaymentPending] = useActionState(
+    updateSubscriptionPaymentMethodAction,
+    undefined
+  );
+
+  // State to track pending upgrade after payment method update
+  const [pendingUpgradeAfterPaymentUpdate, setPendingUpgradeAfterPaymentUpdate] = useState<{
+    data: CheckoutFormData | null;
+  }>({ data: null });
+
   // Action state for fiscal data save
   const [saveFiscalDataState, dispatchSaveFiscalData, saveFiscalDataPending] = useActionState(
     saveFiscalDataAction,
@@ -104,6 +115,18 @@ export default function CheckoutForm({
   const getDefaultCardId = () => {
     if (!paymentCards) return '';
 
+    // PRIORITY 1: Use payment method from current subscription (for upgrades/downgrades)
+    if (currentSubscription?.payment_id) {
+      const subscriptionCard = paymentCards.find(
+        card => card.id === currentSubscription.payment_id
+      );
+      // Only use it if it exists and is not expired
+      if (subscriptionCard && !subscriptionCard.isExpired) {
+        return subscriptionCard.id;
+      }
+    }
+
+    // PRIORITY 2: Fallback to default card from service
     const defaultCard = paymentCards.find(card => card.default);
     if (!defaultCard) return '';
 
@@ -215,6 +238,35 @@ export default function CheckoutForm({
     }
   }, [upgradeState, redirectUrl]);
 
+  // Handle payment method update success - proceed with upgrade
+  useEffect(() => {
+    if (updatePaymentState?.success && pendingUpgradeAfterPaymentUpdate.data) {
+      console.log('Payment method updated successfully! Proceeding with upgrade...');
+
+      if (currentSubscription && fetchedPlanData) {
+        // Now upgrade the subscription
+        startTransition(() => {
+          upgradeAction({
+            subscriptionId: currentSubscription.id,
+            currentPlanId: currentSubscription.plan_id,
+            newPlanId: fetchedPlanData.id,
+            billingCycle: fetchedPlanData.cycle
+          });
+        });
+      }
+
+      // Reset pending state
+      setPendingUpgradeAfterPaymentUpdate({ data: null });
+    } else if (updatePaymentState && !updatePaymentState.success) {
+      console.error('Failed to update payment method:', updatePaymentState.error);
+      // Show error dialog
+      setErrorMessage(updatePaymentState.error || 'Error al actualizar el método de pago. Por favor, intenta nuevamente.');
+      setErrorDialogOpen(true);
+      // Reset pending state
+      setPendingUpgradeAfterPaymentUpdate({ data: null });
+    }
+  }, [updatePaymentState, pendingUpgradeAfterPaymentUpdate, currentSubscription, fetchedPlanData]);
+
   // Handle fiscal data save success - proceed with subscription/card creation
   useEffect(() => {
     if (saveFiscalDataState?.success && pendingAfterFiscalSave.type && pendingAfterFiscalSave.data) {
@@ -223,15 +275,28 @@ export default function CheckoutForm({
       const data = pendingAfterFiscalSave.data;
 
       if (pendingAfterFiscalSave.type === 'upgrade' && currentSubscription) {
-        // Upgrade subscription
-        startTransition(() => {
-          upgradeAction({
-            subscriptionId: currentSubscription.id,
-            currentPlanId: currentSubscription.plan_id,
-            newPlanId: fetchedPlanData!.id,
-            billingCycle: fetchedPlanData!.cycle
+        // Check if payment method needs updating before upgrade
+        if (data.savedCardId && needsPaymentMethodUpdate(data.savedCardId)) {
+          console.log('Payment method changed - updating before upgrade...');
+          setPendingUpgradeAfterPaymentUpdate({ data });
+
+          startTransition(() => {
+            updatePaymentAction({
+              subscriptionId: currentSubscription.id,
+              paymentId: data.savedCardId!
+            });
           });
-        });
+        } else {
+          // Upgrade subscription directly
+          startTransition(() => {
+            upgradeAction({
+              subscriptionId: currentSubscription.id,
+              currentPlanId: currentSubscription.plan_id,
+              newPlanId: fetchedPlanData!.id,
+              billingCycle: fetchedPlanData!.cycle
+            });
+          });
+        }
       } else if (pendingAfterFiscalSave.type === 'subscription' && data.savedCardId) {
         // Create subscription with saved card
         startTransition(() => {
@@ -288,6 +353,17 @@ export default function CheckoutForm({
       setPendingAfterFiscalSave({ type: null, data: null });
     }
   }, [saveFiscalDataState, pendingAfterFiscalSave, userId, fetchedPlanData, paymentId, searchParams, sellerId, userEmail, storeName, userPhone]);
+
+  // Helper function to check if payment method needs updating for subscription upgrades
+  const needsPaymentMethodUpdate = (selectedCardId: string): boolean => {
+    // Only relevant if user has current subscription and is using a saved card
+    if (!currentSubscription?.payment_id || !selectedCardId) {
+      return false;
+    }
+
+    // Check if selected card is different from subscription's payment method
+    return selectedCardId !== currentSubscription.payment_id;
+  };
 
   const submit = (data: CheckoutFormData) => {
     console.log('Form submitted:', data);
@@ -347,15 +423,28 @@ export default function CheckoutForm({
     // If using saved card, create subscription or upgrade immediately
     if (data.savedCardId) {
       if (isUpgradeOrDowngrade && currentSubscription) {
-        // Call upgrade endpoint
-        startTransition(() => {
-          upgradeAction({
-            subscriptionId: currentSubscription.id,
-            currentPlanId: currentSubscription.plan_id,
-            newPlanId: fetchedPlanData.id,
-            billingCycle: fetchedPlanData.cycle
+        // Check if payment method needs updating before upgrade
+        if (needsPaymentMethodUpdate(data.savedCardId)) {
+          console.log('Payment method changed - updating before upgrade...');
+          setPendingUpgradeAfterPaymentUpdate({ data });
+
+          startTransition(() => {
+            updatePaymentAction({
+              subscriptionId: currentSubscription.id,
+              paymentId: data.savedCardId!
+            });
           });
-        });
+        } else {
+          // Call upgrade endpoint directly
+          startTransition(() => {
+            upgradeAction({
+              subscriptionId: currentSubscription.id,
+              currentPlanId: currentSubscription.plan_id,
+              newPlanId: fetchedPlanData.id,
+              billingCycle: fetchedPlanData.cycle
+            });
+          });
+        }
       } else {
         // Call regular subscription endpoint
         startTransition(() => {
@@ -430,7 +519,7 @@ export default function CheckoutForm({
                 control={control}
                 errors={errors}
                 isValid={isValid}
-                isPending={createCardPending || subscriptionPending || upgradePending || saveFiscalDataPending}
+                isPending={createCardPending || subscriptionPending || upgradePending || updatePaymentPending || saveFiscalDataPending}
                 onSubmit={handleSubmit(submit)}
                 savedCards={savedCards}
                 savedBillingInfo={fiscalData?.mappedBillingInfo || null}

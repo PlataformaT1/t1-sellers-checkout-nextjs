@@ -114,6 +114,7 @@ export interface CurrentSubscription {
   plan_name?: string;
   billing_cycle: string;
   status: string;
+  payment_id?: string;
   trial_ends_at?: string;
   current_period_end?: string;
   created_at?: string;

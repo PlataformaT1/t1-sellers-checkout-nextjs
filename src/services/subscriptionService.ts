@@ -200,3 +200,54 @@ export const upgradeSubscriptionAction = async (
     };
   }
 };
+
+export const updateSubscriptionPaymentMethodAction = async (
+  prevState: CreateSubscriptionState | undefined,
+  formData: {
+    subscriptionId: string;
+    paymentId: string;
+  }
+): Promise<CreateSubscriptionState> => {
+  try {
+    const requestBody = {
+      payment_id: formData.paymentId
+    };
+
+    console.log('Updating subscription payment method:', requestBody);
+
+    const response = await fetch(`${url}/suscriptions/subscriptions/${formData.subscriptionId}/payment`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('SUBSCRIPTION PAYMENT UPDATE URL', `${url}/suscriptions/subscriptions/${formData.subscriptionId}/payment`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Error updating payment method:', error);
+
+      const errorMessage = error?.metaData?.message || error?.message || 'Error al actualizar el método de pago';
+
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      message: result.message || 'Método de pago actualizado exitosamente'
+    };
+  } catch (error) {
+    console.error('Error updating payment method:', error);
+    return {
+      success: false,
+      error: 'Error al actualizar el método de pago. Por favor, intenta nuevamente.'
+    };
+  }
+};
