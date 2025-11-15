@@ -1,7 +1,7 @@
 'use client'
 
 import React, { startTransition, useActionState, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Drawer } from '@mui/material';
 import PricingSummary from './PricingSummary';
 import SavedPaymentMethodForm from './SavedPaymentMethodForm';
@@ -105,6 +105,9 @@ export default function CheckoutForm({
     data: CheckoutFormData | null;
   }>({ data: null });
 
+  // State to track payment-only update (same plan + same cycle, only payment changed)
+  const [pendingPaymentOnlyUpdate, setPendingPaymentOnlyUpdate] = useState(false);
+
   // Action state for fiscal data save
   const [saveFiscalDataState, dispatchSaveFiscalData, saveFiscalDataPending] = useActionState(
     saveFiscalDataAction,
@@ -140,6 +143,27 @@ export default function CheckoutForm({
     return isExpired ? '' : defaultCard.id;
   };
 
+  // Helper function to check if user selected same plan and same cycle
+  const isSamePlanAndCycle = (): boolean => {
+    if (!currentSubscription || !fetchedPlanData) {
+      return false;
+    }
+
+    return currentSubscription.plan_id === fetchedPlanData.id &&
+           currentSubscription.billing_cycle === fetchedPlanData.cycle;
+  };
+
+  // Helper function to check if payment method needs updating for subscription upgrades
+  const needsPaymentMethodUpdate = (selectedCardId: string): boolean => {
+    // Only relevant if user has current subscription and is using a saved card
+    if (!currentSubscription?.payment_id || !selectedCardId) {
+      return false;
+    }
+
+    // Check if selected card is different from subscription's payment method
+    return selectedCardId !== currentSubscription.payment_id;
+  };
+
   const { handleSubmit, control, formState: { errors, isValid } } = useForm<CheckoutFormData>({
     defaultValues: {
       cardNumber: '',
@@ -151,6 +175,17 @@ export default function CheckoutForm({
     },
     mode: 'onChange'
   });
+
+  // Watch the selected card ID to determine if button should be disabled
+  const selectedCardId = useWatch({ control, name: 'savedCardId' });
+
+  // Determine if submit button should be disabled
+  // Disable when: same plan + same cycle + same payment method (nothing to update)
+  const isSubmitDisabled = Boolean(
+    isSamePlanAndCycle() &&
+    selectedCardId &&
+    !needsPaymentMethodUpdate(selectedCardId)
+  );
 
   // Helper function to convert PaymentMethod to SavedCard
   const convertToSavedCard = (method: PaymentMethod): SavedCard => {
@@ -238,34 +273,44 @@ export default function CheckoutForm({
     }
   }, [upgradeState, redirectUrl]);
 
-  // Handle payment method update success - proceed with upgrade
+  // Handle payment method update success - proceed with upgrade or redirect
   useEffect(() => {
-    if (updatePaymentState?.success && pendingUpgradeAfterPaymentUpdate.data) {
-      console.log('Payment method updated successfully! Proceeding with upgrade...');
+    if (updatePaymentState?.success) {
+      // Check if this is a payment-only update (same plan + same cycle)
+      if (pendingPaymentOnlyUpdate) {
+        console.log('Payment method updated successfully! Redirecting...');
+        // Redirect to success URL
+        window.location.href = redirectUrl;
+        setPendingPaymentOnlyUpdate(false);
+      } else if (pendingUpgradeAfterPaymentUpdate.data) {
+        // This is a payment update before an upgrade
+        console.log('Payment method updated successfully! Proceeding with upgrade...');
 
-      if (currentSubscription && fetchedPlanData) {
-        // Now upgrade the subscription
-        startTransition(() => {
-          upgradeAction({
-            subscriptionId: currentSubscription.id,
-            currentPlanId: currentSubscription.plan_id,
-            newPlanId: fetchedPlanData.id,
-            billingCycle: fetchedPlanData.cycle
+        if (currentSubscription && fetchedPlanData) {
+          // Now upgrade the subscription
+          startTransition(() => {
+            upgradeAction({
+              subscriptionId: currentSubscription.id,
+              currentPlanId: currentSubscription.plan_id,
+              newPlanId: fetchedPlanData.id,
+              billingCycle: fetchedPlanData.cycle
+            });
           });
-        });
-      }
+        }
 
-      // Reset pending state
-      setPendingUpgradeAfterPaymentUpdate({ data: null });
+        // Reset pending state
+        setPendingUpgradeAfterPaymentUpdate({ data: null });
+      }
     } else if (updatePaymentState && !updatePaymentState.success) {
       console.error('Failed to update payment method:', updatePaymentState.error);
       // Show error dialog
       setErrorMessage(updatePaymentState.error || 'Error al actualizar el método de pago. Por favor, intenta nuevamente.');
       setErrorDialogOpen(true);
-      // Reset pending state
+      // Reset pending states
       setPendingUpgradeAfterPaymentUpdate({ data: null });
+      setPendingPaymentOnlyUpdate(false);
     }
-  }, [updatePaymentState, pendingUpgradeAfterPaymentUpdate, currentSubscription, fetchedPlanData]);
+  }, [updatePaymentState, pendingUpgradeAfterPaymentUpdate, pendingPaymentOnlyUpdate, currentSubscription, fetchedPlanData, redirectUrl]);
 
   // Handle fiscal data save success - proceed with subscription/card creation
   useEffect(() => {
@@ -354,17 +399,6 @@ export default function CheckoutForm({
     }
   }, [saveFiscalDataState, pendingAfterFiscalSave, userId, fetchedPlanData, paymentId, searchParams, sellerId, userEmail, storeName, userPhone]);
 
-  // Helper function to check if payment method needs updating for subscription upgrades
-  const needsPaymentMethodUpdate = (selectedCardId: string): boolean => {
-    // Only relevant if user has current subscription and is using a saved card
-    if (!currentSubscription?.payment_id || !selectedCardId) {
-      return false;
-    }
-
-    // Check if selected card is different from subscription's payment method
-    return selectedCardId !== currentSubscription.payment_id;
-  };
-
   const submit = (data: CheckoutFormData) => {
     console.log('Form submitted:', data);
 
@@ -374,15 +408,40 @@ export default function CheckoutForm({
       return;
     }
 
+    // Detect if this is same plan and same cycle (payment-only update scenario)
+    const samePlanAndCycle = isSamePlanAndCycle();
+
     // Detect if this is an upgrade/downgrade
     const isUpgradeOrDowngrade = currentSubscription &&
       (currentSubscription.plan_id !== fetchedPlanData.id ||
        currentSubscription.billing_cycle !== fetchedPlanData.cycle);
 
+    console.log('Same plan and cycle:', samePlanAndCycle);
     console.log('Is upgrade/downgrade:', isUpgradeOrDowngrade);
     if (isUpgradeOrDowngrade) {
       console.log('Current plan:', currentSubscription.plan_id, currentSubscription.billing_cycle);
       console.log('New plan:', fetchedPlanData.id, fetchedPlanData.cycle);
+    }
+
+    // Handle same plan + same cycle scenario
+    if (samePlanAndCycle && data.savedCardId && currentSubscription) {
+      // Only update payment method if it changed
+      if (needsPaymentMethodUpdate(data.savedCardId)) {
+        console.log('Same plan/cycle - updating payment method only...');
+        setPendingPaymentOnlyUpdate(true);
+
+        startTransition(() => {
+          updatePaymentAction({
+            subscriptionId: currentSubscription.id,
+            paymentId: data.savedCardId!
+          });
+        });
+        return;
+      } else {
+        // Same plan, same cycle, same payment method - nothing to do
+        console.log('Same plan/cycle/payment - nothing to update');
+        return;
+      }
     }
 
     // Check if user checked the "Añadir datos de facturación" checkbox
@@ -520,6 +579,7 @@ export default function CheckoutForm({
                 errors={errors}
                 isValid={isValid}
                 isPending={createCardPending || subscriptionPending || upgradePending || updatePaymentPending || saveFiscalDataPending}
+                isDisabled={isSubmitDisabled}
                 onSubmit={handleSubmit(submit)}
                 savedCards={savedCards}
                 savedBillingInfo={fiscalData?.mappedBillingInfo || null}

@@ -23,6 +23,7 @@ interface SavedPaymentMethodFormProps {
   errors: FieldErrors<CheckoutFormData>;
   isValid: boolean;
   isPending: boolean;
+  isDisabled?: boolean;
   onSubmit: () => void;
   savedCards: SavedCard[];
   savedBillingInfo: MappedBillingInfoI | null;
@@ -33,6 +34,7 @@ export default function SavedPaymentMethodForm({
   errors,
   isValid,
   isPending,
+  isDisabled = false,
   onSubmit,
   savedCards,
   savedBillingInfo
@@ -872,20 +874,27 @@ export default function SavedPaymentMethodForm({
         <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
           <Button
             onClick={onSubmit}
-            disabled={!isValid || isPending}
+            disabled={!isValid || isPending || isDisabled}
             loading={isPending}
             className="!w-full !h-[36px]"
             style={{
-              background: !isValid || isPending
+              background: !isValid || isPending || isDisabled
                 ? 'linear-gradient(90deg, rgb(241, 176, 169) 0%, rgb(241, 176, 169) 100%)'
                 : undefined
             }}
           >
             Suscribirse
           </Button>
-          <p className="font-normal leading-[normal] relative shrink-0 text-[#4c4c4c] text-[11px] text-center w-full">
-            Al suscribirte aceptas los términos y condiciones de pago establecidos por T1tienda.
-          </p>
+          {isDisabled && (
+            <p className="font-normal leading-[normal] relative shrink-0 text-[#4c4c4c] text-[11px] text-center w-full">
+              Ya tienes este plan activo con este método de pago
+            </p>
+          )}
+          {!isDisabled && (
+            <p className="font-normal leading-[normal] relative shrink-0 text-[#4c4c4c] text-[11px] text-center w-full">
+              Al suscribirte aceptas los términos y condiciones de pago establecidos por T1tienda.
+            </p>
+          )}
         </div>
       </div>
 
