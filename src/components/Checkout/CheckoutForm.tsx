@@ -290,7 +290,7 @@ export default function CheckoutForm({
           // Now upgrade the subscription
           startTransition(() => {
             upgradeAction({
-              subscriptionId: currentSubscription.id,
+              subscriptionId: currentSubscription.cronos_subscription_id,
               currentPlanId: currentSubscription.plan_id,
               newPlanId: fetchedPlanData.id,
               billingCycle: fetchedPlanData.cycle
@@ -327,7 +327,7 @@ export default function CheckoutForm({
 
           startTransition(() => {
             updatePaymentAction({
-              subscriptionId: currentSubscription.id,
+              subscriptionId: currentSubscription.cronos_subscription_id,
               paymentId: data.savedCardId!
             });
           });
@@ -335,7 +335,7 @@ export default function CheckoutForm({
           // Upgrade subscription directly
           startTransition(() => {
             upgradeAction({
-              subscriptionId: currentSubscription.id,
+              subscriptionId: currentSubscription.cronos_subscription_id,
               currentPlanId: currentSubscription.plan_id,
               newPlanId: fetchedPlanData!.id,
               billingCycle: fetchedPlanData!.cycle
@@ -432,7 +432,7 @@ export default function CheckoutForm({
 
         startTransition(() => {
           updatePaymentAction({
-            subscriptionId: currentSubscription.id,
+            subscriptionId: currentSubscription.cronos_subscription_id,
             paymentId: data.savedCardId!
           });
         });
@@ -489,7 +489,7 @@ export default function CheckoutForm({
 
           startTransition(() => {
             updatePaymentAction({
-              subscriptionId: currentSubscription.id,
+              subscriptionId: currentSubscription.cronos_subscription_id,
               paymentId: data.savedCardId!
             });
           });
@@ -497,7 +497,7 @@ export default function CheckoutForm({
           // Call upgrade endpoint directly
           startTransition(() => {
             upgradeAction({
-              subscriptionId: currentSubscription.id,
+              subscriptionId: currentSubscription.cronos_subscription_id,
               currentPlanId: currentSubscription.plan_id,
               newPlanId: fetchedPlanData.id,
               billingCycle: fetchedPlanData.cycle

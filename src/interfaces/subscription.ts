@@ -86,7 +86,6 @@ export interface SubscriptionMetadata {
 }
 
 export interface CreateSubscriptionRequest {
-  user_id: null;
   seller_id: number;
   shop_id: number;
   service_type: string;
@@ -109,7 +108,7 @@ export interface CreateSubscriptionResponse {
 
 // Current Subscription interfaces
 export interface CurrentSubscription {
-  id: string;
+  cronos_subscription_id: string;
   plan_id: string;
   plan_name?: string;
   billing_cycle: string;

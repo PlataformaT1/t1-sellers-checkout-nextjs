@@ -78,7 +78,6 @@ export const createSubscriptionAction = async (
 ): Promise<CreateSubscriptionState> => {
   try {
     const requestBody: CreateSubscriptionRequest = {
-      user_id: null,
       seller_id: formData.userId,
       shop_id: formData.shopId,
       service_type: "store",
