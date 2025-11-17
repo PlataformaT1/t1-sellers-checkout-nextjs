@@ -232,8 +232,7 @@ export default function CheckoutForm({
             userId: userId,
             shopId: sellerId,
             planId: fetchedPlanData.id,
-            customerId: paymentId,
-            paymentId: createdCardId,
+            cardId: createdCardId,
             planName: fetchedPlanData.name,
             billingCycle: fetchedPlanData.cycle,
             currency: fetchedPlanData.currency
@@ -359,8 +358,7 @@ export default function CheckoutForm({
             userId: userId!,
             shopId: sellerId,
             planId: fetchedPlanData!.id,
-            customerId: paymentId,
-            paymentId: data.savedCardId!,
+            cardId: data.savedCardId!,
             planName: fetchedPlanData!.name,
             billingCycle: fetchedPlanData!.cycle,
             currency: fetchedPlanData!.currency
@@ -520,8 +518,7 @@ export default function CheckoutForm({
             userId: userId,
             shopId: sellerId,
             planId: fetchedPlanData.id,
-            customerId: paymentId,
-            paymentId: data.savedCardId!,
+            cardId: data.savedCardId!,
             planName: fetchedPlanData.name,
             billingCycle: fetchedPlanData.cycle,
             currency: fetchedPlanData.currency
