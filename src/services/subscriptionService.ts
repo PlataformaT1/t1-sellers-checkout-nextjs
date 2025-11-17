@@ -69,8 +69,7 @@ export const createSubscriptionAction = async (
     userId: number;
     shopId: number;
     planId: string;
-    customerId: string;
-    paymentId: string;
+    cardId: string;
     planName: string;
     billingCycle: string;
     currency: string;
@@ -82,8 +81,7 @@ export const createSubscriptionAction = async (
       shop_id: formData.shopId,
       service_type: "store",
       plan_id: formData.planId,
-      customer_id: formData.customerId,
-      payment_id: formData.paymentId,
+      card_id: formData.cardId,
       payment_method: "tarjeta",
       billing_cycle: formData.billingCycle,
       country_code: "MX",
@@ -107,7 +105,7 @@ export const createSubscriptionAction = async (
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Error creating subscription:', error);
+      console.error('Error creating subscription:', JSON.stringify(error));
 
       // Extract error message from API response structure
       // Check metaData.message first, then fall back to generic message
@@ -126,7 +124,7 @@ export const createSubscriptionAction = async (
       message: result.message || 'Suscripción creada exitosamente'
     };
   } catch (error) {
-    console.error('Error creating subscription:', error);
+    console.error('Error creating subscription:', JSON.stringify(error));
     // For network errors or unexpected errors, use generic message
     return {
       success: false,

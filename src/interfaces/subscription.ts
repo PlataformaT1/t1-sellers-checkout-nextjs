@@ -90,8 +90,7 @@ export interface CreateSubscriptionRequest {
   shop_id: number;
   service_type: string;
   plan_id: string;
-  customer_id: string;
-  payment_id: string;
+  card_id: string;
   payment_method: string;
   billing_cycle: string;
   country_code: string;
