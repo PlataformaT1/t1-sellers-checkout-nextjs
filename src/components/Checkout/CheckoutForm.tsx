@@ -10,7 +10,7 @@ import MobileHeader from './MobileHeader';
 import MobileFooter from './MobileFooter';
 import { CheckoutFormData, CheckoutFormProps, PlanData, SavedCard } from '@interfaces/checkout';
 import { createPaymentCardAction } from '@services/paymentMethodsService';
-import { createSubscriptionAction, upgradeSubscriptionAction, updateSubscriptionPaymentMethodAction } from '@services/subscriptionService';
+import { createSubscriptionAction, changeSubscriptionAction, updateSubscriptionPaymentMethodAction } from '@services/subscriptionService';
 import { PaymentMethod } from '@interfaces/paymentMethods';
 import { saveFiscalDataAction } from '@services/fiscalDataService';
 
@@ -79,6 +79,9 @@ export default function CheckoutForm({
   // Mobile "Ver detalle" dropdown state
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
 
+  // State to track if we're redirecting (keeps button disabled until redirect)
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   // Action state for card creation
   const [createCardState, createCardAction, createCardPending] = useActionState(createPaymentCardAction, undefined);
 
@@ -88,9 +91,9 @@ export default function CheckoutForm({
     undefined
   );
 
-  // Action state for upgrade subscription
-  const [upgradeState, upgradeAction, upgradePending] = useActionState(
-    upgradeSubscriptionAction,
+  // Action state for change subscription (upgrade/downgrade/billing cycle change)
+  const [changeState, changeAction, changePending] = useActionState(
+    changeSubscriptionAction,
     undefined
   );
 
@@ -187,6 +190,9 @@ export default function CheckoutForm({
     !needsPaymentMethodUpdate(selectedCardId)
   );
 
+  // Determine if this is a subscription change (update) vs new subscription
+  const isSubscriptionChange = Boolean(currentSubscription);
+
   // Helper function to convert PaymentMethod to SavedCard
   const convertToSavedCard = (method: PaymentMethod): SavedCard => {
     const now = new Date();
@@ -249,6 +255,8 @@ export default function CheckoutForm({
   useEffect(() => {
     if (subscriptionState?.success) {
       console.log('Subscription created successfully! Redirecting...');
+      // Keep button disabled while redirecting
+      setIsRedirecting(true);
       // Redirect to the success URL
       window.location.href = redirectUrl;
     } else if (subscriptionState && !subscriptionState.success) {
@@ -259,19 +267,21 @@ export default function CheckoutForm({
     }
   }, [subscriptionState, redirectUrl]);
 
-  // Handle upgrade success - redirect
+  // Handle change subscription success - redirect
   useEffect(() => {
-    if (upgradeState?.success) {
-      console.log('Subscription upgraded successfully! Redirecting...');
+    if (changeState?.success) {
+      console.log('Subscription changed successfully! Redirecting...');
+      // Keep button disabled while redirecting
+      setIsRedirecting(true);
       // Redirect to the success URL
       window.location.href = redirectUrl;
-    } else if (upgradeState && !upgradeState.success) {
-      console.error('Failed to upgrade subscription:', upgradeState.error);
+    } else if (changeState && !changeState.success) {
+      console.error('Failed to change subscription:', changeState.error);
       // Show error dialog
-      setErrorMessage(upgradeState.error || 'Error al actualizar la suscripción. Por favor, intenta nuevamente.');
+      setErrorMessage(changeState.error || 'Error al actualizar la suscripción. Por favor, intenta nuevamente.');
       setErrorDialogOpen(true);
     }
-  }, [upgradeState, redirectUrl]);
+  }, [changeState, redirectUrl]);
 
   // Handle payment method update success - proceed with upgrade or redirect
   useEffect(() => {
@@ -279,19 +289,20 @@ export default function CheckoutForm({
       // Check if this is a payment-only update (same plan + same cycle)
       if (pendingPaymentOnlyUpdate) {
         console.log('Payment method updated successfully! Redirecting...');
+        // Keep button disabled while redirecting
+        setIsRedirecting(true);
         // Redirect to success URL
         window.location.href = redirectUrl;
         setPendingPaymentOnlyUpdate(false);
       } else if (pendingUpgradeAfterPaymentUpdate.data) {
-        // This is a payment update before an upgrade
-        console.log('Payment method updated successfully! Proceeding with upgrade...');
+        // This is a payment update before a plan change
+        console.log('Payment method updated successfully! Proceeding with plan change...');
 
         if (currentSubscription && fetchedPlanData) {
-          // Now upgrade the subscription
+          // Now change the subscription
           startTransition(() => {
-            upgradeAction({
+            changeAction({
               subscriptionId: currentSubscription.cronos_subscription_id,
-              currentPlanId: currentSubscription.plan_id,
               newPlanId: fetchedPlanData.id,
               billingCycle: fetchedPlanData.cycle
             });
@@ -332,11 +343,10 @@ export default function CheckoutForm({
             });
           });
         } else {
-          // Upgrade subscription directly
+          // Change subscription directly
           startTransition(() => {
-            upgradeAction({
+            changeAction({
               subscriptionId: currentSubscription.cronos_subscription_id,
-              currentPlanId: currentSubscription.plan_id,
               newPlanId: fetchedPlanData!.id,
               billingCycle: fetchedPlanData!.cycle
             });
@@ -494,11 +504,10 @@ export default function CheckoutForm({
             });
           });
         } else {
-          // Call upgrade endpoint directly
+          // Call change subscription endpoint directly
           startTransition(() => {
-            upgradeAction({
+            changeAction({
               subscriptionId: currentSubscription.cronos_subscription_id,
-              currentPlanId: currentSubscription.plan_id,
               newPlanId: fetchedPlanData.id,
               billingCycle: fetchedPlanData.cycle
             });
@@ -578,8 +587,9 @@ export default function CheckoutForm({
                 control={control}
                 errors={errors}
                 isValid={isValid}
-                isPending={createCardPending || subscriptionPending || upgradePending || updatePaymentPending || saveFiscalDataPending}
+                isPending={createCardPending || subscriptionPending || changePending || updatePaymentPending || saveFiscalDataPending || isRedirecting}
                 isDisabled={isSubmitDisabled}
+                isSubscriptionChange={isSubscriptionChange}
                 onSubmit={handleSubmit(submit)}
                 savedCards={savedCards}
                 savedBillingInfo={fiscalData?.mappedBillingInfo || null}

@@ -24,6 +24,7 @@ interface SavedPaymentMethodFormProps {
   isValid: boolean;
   isPending: boolean;
   isDisabled?: boolean;
+  isSubscriptionChange?: boolean;
   onSubmit: () => void;
   savedCards: SavedCard[];
   savedBillingInfo: MappedBillingInfoI | null;
@@ -35,6 +36,7 @@ export default function SavedPaymentMethodForm({
   isValid,
   isPending,
   isDisabled = false,
+  isSubscriptionChange = false,
   onSubmit,
   savedCards,
   savedBillingInfo
@@ -883,7 +885,7 @@ export default function SavedPaymentMethodForm({
                 : undefined
             }}
           >
-            Suscribirse
+            {isSubscriptionChange ? 'Actualizar' : 'Suscribirse'}
           </Button>
           {isDisabled && (
             <p className="font-normal leading-[normal] relative shrink-0 text-[#4c4c4c] text-[11px] text-center w-full">

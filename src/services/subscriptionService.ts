@@ -135,34 +135,31 @@ export const createSubscriptionAction = async (
   }
 };
 
-export const upgradeSubscriptionAction = async (
+export const changeSubscriptionAction = async (
   prevState: CreateSubscriptionState | undefined,
   formData: {
     subscriptionId: string;
-    currentPlanId: string;
-    newPlanId: string;
+    newPlanId?: string;
     billingCycle: string;
   }
 ): Promise<CreateSubscriptionState> => {
   try {
-    // Map billing cycle to recurring interval
-    const intervalMap: { [key: string]: string } = {
-      'monthly': 'month',
-      'annual': 'year'
+    // Build request body based on what's changing
+    const requestBody: {
+      new_plan_id?: string;
+      new_billing_cycle: string;
+    } = {
+      new_billing_cycle: formData.billingCycle
     };
 
-    const requestBody = {
-      current_plan_id: formData.currentPlanId,
-      new_plan_id: formData.newPlanId,
-      recurring: {
-        duration: 1,
-        interval: intervalMap[formData.billingCycle] || 'month'
-      }
-    };
+    // Only include new_plan_id if it's provided (plan change)
+    if (formData.newPlanId) {
+      requestBody.new_plan_id = formData.newPlanId;
+    }
 
-    console.log('Upgrading subscription with:', requestBody);
+    console.log('Changing subscription with:', requestBody);
 
-    const response = await fetch(`${url}/suscriptions/subscriptions/${formData.subscriptionId}/upgrade-plan`, {
+    const response = await fetch(`${url}/suscriptions/subscriptions/${formData.subscriptionId}/change`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -170,11 +167,11 @@ export const upgradeSubscriptionAction = async (
       body: JSON.stringify(requestBody)
     });
 
-    console.log('SUBSCRIPTION UPGRADE URL', `${url}/suscriptions/subscriptions/${formData.subscriptionId}/upgrade-plan`);
+    console.log('SUBSCRIPTION CHANGE URL', `${url}/suscriptions/subscriptions/${formData.subscriptionId}/change`);
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Error upgrading subscription:', error);
+      console.error('Error changing subscription:', error);
 
       // Extract error message from API response structure
       const errorMessage = error?.metaData?.message || error?.message || 'Error al actualizar la suscripción';
@@ -192,7 +189,7 @@ export const upgradeSubscriptionAction = async (
       message: result.message || 'Suscripción actualizada exitosamente'
     };
   } catch (error) {
-    console.error('Error upgrading subscription:', error);
+    console.error('Error changing subscription:', error);
     return {
       success: false,
       error: 'Error al actualizar la suscripción. Por favor, intenta nuevamente.'
