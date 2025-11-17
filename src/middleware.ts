@@ -7,7 +7,7 @@ import { getUserAccessCached } from '@services/userAccessService';
 import { updateUserStore } from '@services/authService';
 
 const redirectUrl = `${process.env.NEXT_PUBLIC_ONBOARDING_URL}?service=SHIPPING`;
-const accountRedirectUrl = `${process.env.NEXT_PUBLIC_T1_ACCOUNT_LINK}{SHOPID}&redirectUri=/my-accesses`;
+const accountRedirectUrl = `${process.env.NEXT_PUBLIC_ACCOUNT_URL}{SHOPID}&redirectUri=/my-accesses`;
 const keycloakConfig = JSON.parse(`${process.env.KEYCLOAK}`);
 const retries = 5;
 

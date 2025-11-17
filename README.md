@@ -26,7 +26,7 @@ npm run dev
 | `KEYCLOAK_ADMIN_CREDENTIALS` | Contains the admin credentials for Keycloak in JSON format. |
 | `AUTH_SECRET` | A secret key used for session authentication. |
 | `OTP_SERVICE_URL` | The base URL for the One-Time Password (OTP) service. |
-| `NEXT_PUBLIC_T1_ACCOUNT_LINK` | The public URL for the acoount. |
+| `NEXT_PUBLIC_ACCOUNT_URL` | The public URL for the acoount. |
 | `NEXT_PUBLIC_WORKSPACE_URL` | The public URL for the workspace, used for redirects. |
 
 ## Project Structure
