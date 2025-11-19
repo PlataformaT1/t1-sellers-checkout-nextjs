@@ -14,6 +14,7 @@ import CarnetIcon from 'assets/checkout/carnet-icon.svg';
 import PaymentsIcon from 'assets/checkout/payments-icon.svg';
 import Image from 'next/image';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { Skeleton } from '@mui/material';
 import valid from 'card-validator';
 import type { CardNumberVerification } from 'card-validator/dist/card-number';
 import { getRegimenesFiscales, getUsosCFDI, type RegimenFiscal, type UsoCFDI } from '@services/commonsService';
@@ -25,6 +26,8 @@ interface SavedPaymentMethodFormProps {
   isPending: boolean;
   isDisabled?: boolean;
   isSubscriptionChange?: boolean;
+  isFiscalDataLoading?: boolean;
+  isPaymentCardsLoading?: boolean;
   onSubmit: () => void;
   savedCards: SavedCard[];
   savedBillingInfo: MappedBillingInfoI | null;
@@ -37,6 +40,8 @@ export default function SavedPaymentMethodForm({
   isPending,
   isDisabled = false,
   isSubscriptionChange = false,
+  isFiscalDataLoading = false,
+  isPaymentCardsLoading = false,
   onSubmit,
   savedCards,
   savedBillingInfo
@@ -53,6 +58,13 @@ export default function SavedPaymentMethodForm({
   const [loadingRegimenes, setLoadingRegimenes] = useState(false);
   const [loadingUsos, setLoadingUsos] = useState(false);
   const rfcDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Automatically show new card form when no saved cards are available
+  useEffect(() => {
+    if (!isPaymentCardsLoading) {
+      setShowNewCardForm(savedCards.length === 0);
+    }
+  }, [savedCards.length, isPaymentCardsLoading]);
 
   // Reset card validation when switching back to saved cards
   useEffect(() => {
@@ -223,17 +235,25 @@ export default function SavedPaymentMethodForm({
 
         <div className="content-stretch flex flex-col gap-[20px] items-start relative shrink-0 w-full">
           {/* Header - show different text based on state */}
-          {showNewCardForm ? (
+          {isPaymentCardsLoading ? (
+            /* Show skeleton while loading payment cards */
+            <div className="bg-white content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+              <Skeleton variant="text" width={220} height={20} />
+              <Skeleton variant="rectangular" width="100%" height={50} sx={{ borderRadius: '10px' }} />
+            </div>
+          ) : showNewCardForm ? (
             <div className="content-stretch flex gap-[20px] items-start leading-[normal] relative shrink-0 text-[14px] text-[#4c4c4c] w-full">
               <p className="basis-0 font-semibold grow min-h-px min-w-px relative shrink-0 whitespace-pre-wrap">
                 Agregar  nueva tarjeta
               </p>
-              <p
-                onClick={() => setShowNewCardForm(false)}
-                className="font-bold relative shrink-0 text-nowrap whitespace-pre cursor-pointer"
-              >
-                Cancelar
-              </p>
+              {savedCards.length > 0 && (
+                <p
+                  onClick={() => setShowNewCardForm(false)}
+                  className="font-bold relative shrink-0 text-nowrap whitespace-pre cursor-pointer"
+                >
+                  Cancelar
+                </p>
+              )}
             </div>
           ) : (
             /* Saved Card Selector */
@@ -364,7 +384,7 @@ export default function SavedPaymentMethodForm({
           )}
 
           {/* New Card Form - show when "Agregar nueva tarjeta" is selected */}
-          {showNewCardForm && (
+          {showNewCardForm && !isPaymentCardsLoading && (
             <div className="content-start flex flex-wrap gap-[20px] items-start relative shrink-0 w-full">
               <div className="basis-0 content-stretch flex flex-col gap-[16px] grow items-start min-h-px min-w-px relative shrink-0">
                 <div className="content-stretch flex flex-col gap-[15px] items-start justify-end relative shrink-0 w-full">
@@ -612,6 +632,11 @@ export default function SavedPaymentMethodForm({
                   <span>{savedBillingInfo.razonSocial}</span>
                   <span>  •  RFC: {savedBillingInfo.rfc}</span>
                 </p>
+              </div>
+            ) : isFiscalDataLoading ? (
+              /* Show skeleton while loading fiscal data */
+              <div className="content-stretch flex items-center relative shrink-0 leading-0">
+                <Skeleton variant="text" width={180} height={40} />
               </div>
             ) : (
               /* Checkbox for adding billing info - only show if no saved billing info */

@@ -93,3 +93,40 @@ export const getFiscalData = async (sellerId: number): Promise<GetFiscalDataResp
     return null;
   }
 };
+
+export interface GetFiscalDataState {
+  success: boolean;
+  data?: GetFiscalDataResponse;
+  error?: string;
+}
+
+/**
+ * Server action to get fiscal data for a seller
+ * @param prevState - Previous state from useActionState
+ * @param sellerId - The seller ID
+ */
+export async function getFiscalDataAction(
+  prevState: GetFiscalDataState | undefined,
+  sellerId: number
+): Promise<GetFiscalDataState> {
+  try {
+    const response = await getFiscalData(sellerId);
+
+    if (!response) {
+      return {
+        success: false,
+        error: 'Failed to fetch fiscal data'
+      };
+    }
+
+    return {
+      success: true,
+      data: response
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Failed to fetch fiscal data'
+    };
+  }
+}

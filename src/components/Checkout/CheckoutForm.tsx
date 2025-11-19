@@ -9,10 +9,11 @@ import ErrorDialog from './ErrorDialog';
 import MobileHeader from './MobileHeader';
 import MobileFooter from './MobileFooter';
 import { CheckoutFormData, CheckoutFormProps, PlanData, SavedCard } from '@interfaces/checkout';
-import { createPaymentCardAction } from '@services/paymentMethodsService';
+import { createPaymentCardAction, getPaymentCardsAction } from '@services/paymentMethodsService';
 import { createSubscriptionAction, changeSubscriptionAction, updateSubscriptionPaymentMethodAction, previewSubscriptionChangeAction } from '@services/subscriptionService';
 import { PaymentMethod } from '@interfaces/paymentMethods';
 import { saveFiscalDataAction } from '@services/fiscalDataService';
+import { getFiscalDataAction } from '@services/walletService';
 
 export default function CheckoutForm({
   searchParams,
@@ -123,13 +124,34 @@ export default function CheckoutForm({
     undefined
   );
 
+  // Action state for fetching payment cards (client-side)
+  const [getPaymentCardsState, getPaymentCardsActionDispatch, getPaymentCardsPending] = useActionState(
+    getPaymentCardsAction,
+    undefined
+  );
+
+  // Action state for fetching fiscal data (client-side)
+  const [getFiscalDataState, getFiscalDataActionDispatch, getFiscalDataPending] = useActionState(
+    getFiscalDataAction,
+    undefined
+  );
+
+  // Use client-side fetched data if available, otherwise fallback to props
+  const activePaymentCards = getPaymentCardsState?.success && getPaymentCardsState.data
+    ? getPaymentCardsState.data.data
+    : paymentCards;
+
+  const activeFiscalData = getFiscalDataState?.success && getFiscalDataState.data
+    ? getFiscalDataState.data
+    : fiscalData;
+
   // Find the default card for initial value (skip if expired)
   const getDefaultCardId = () => {
-    if (!paymentCards) return '';
+    if (!activePaymentCards) return '';
 
     // PRIORITY 1: Use payment method from current subscription (for upgrades/downgrades)
     if (currentSubscription?.payment_id) {
-      const subscriptionCard = paymentCards.find(
+      const subscriptionCard = activePaymentCards.find(
         card => card.id === currentSubscription.payment_id
       );
       // Only use it if it exists and is not expired
@@ -139,7 +161,7 @@ export default function CheckoutForm({
     }
 
     // PRIORITY 2: Fallback to default card from service
-    const defaultCard = paymentCards.find(card => card.default);
+    const defaultCard = activePaymentCards.find(card => card.default);
     if (!defaultCard) return '';
 
     // Check if default card is expired
@@ -173,7 +195,7 @@ export default function CheckoutForm({
     return selectedCardId !== currentSubscription.payment_id;
   };
 
-  const { handleSubmit, control, formState: { errors, isValid } } = useForm<CheckoutFormData>({
+  const { handleSubmit, control, formState: { errors, isValid }, setValue, trigger } = useForm<CheckoutFormData>({
     defaultValues: {
       cardNumber: '',
       expirationDate: '',
@@ -218,9 +240,9 @@ export default function CheckoutForm({
     };
   };
 
-  // Convert payment cards from props to SavedCard format
-  const savedCards: SavedCard[] = paymentCards
-    ? paymentCards.map(convertToSavedCard)
+  // Convert payment cards to SavedCard format (use client-side fetched data if available)
+  const savedCards: SavedCard[] = activePaymentCards
+    ? activePaymentCards.map(convertToSavedCard)
     : [];
 
   // Fetch subscription change preview at component mount
@@ -238,6 +260,40 @@ export default function CheckoutForm({
       });
     }
   }, []); // Empty dependency array - only run once at mount
+
+  // Fetch payment cards and fiscal data client-side
+  useEffect(() => {
+    if (serviceData) {
+      // Fetch payment cards if we have payment_id and haven't fetched yet
+      if (serviceData.services?.payments?.payment_id && !getPaymentCardsState) {
+        startTransition(() => {
+          getPaymentCardsActionDispatch(serviceData.services.payments.payment_id);
+        });
+      }
+
+      // Fetch fiscal data if we have seller_id and haven't fetched yet
+      if (serviceData.id_seller && !getFiscalDataState) {
+        startTransition(() => {
+          getFiscalDataActionDispatch(serviceData.id_seller);
+        });
+      }
+    }
+  }, []); // Empty dependency array - only run once at mount
+
+  // Set default card ID after payment cards are loaded
+  useEffect(() => {
+    if (getPaymentCardsState?.success && activePaymentCards && activePaymentCards.length > 0) {
+      const defaultCardId = getDefaultCardId();
+      if (defaultCardId) {
+        console.log('Setting default card ID:', defaultCardId);
+        setValue('savedCardId', defaultCardId);
+        // Trigger validation after a brief delay to ensure form state is updated
+        setTimeout(() => {
+          trigger();
+        }, 50);
+      }
+    }
+  }, [getPaymentCardsState?.success, activePaymentCards]);
 
   // Handle successful card creation - then create subscription
   useEffect(() => {
@@ -622,9 +678,11 @@ export default function CheckoutForm({
                 isPending={createCardPending || subscriptionPending || changePending || updatePaymentPending || saveFiscalDataPending || isRedirecting}
                 isDisabled={isSubmitDisabled}
                 isSubscriptionChange={isSubscriptionChange}
+                isFiscalDataLoading={getFiscalDataPending && !fiscalData}
+                isPaymentCardsLoading={getPaymentCardsPending && !paymentCards}
                 onSubmit={handleSubmit(submit)}
                 savedCards={savedCards}
-                savedBillingInfo={fiscalData?.mappedBillingInfo || null}
+                savedBillingInfo={activeFiscalData?.mappedBillingInfo || null}
               />
             </div>
           </div>

@@ -1,8 +1,6 @@
 import CheckoutForm from "@components/Checkout/CheckoutForm";
 import CheckoutError from "@components/Checkout/CheckoutError";
 import { getStoreData } from "@services/identityService";
-import { getPaymentCards } from "@services/paymentMethodsService";
-import { getFiscalData } from "@services/walletService";
 import { getPlanById, getCurrentSubscription } from "@services/subscriptionService";
 import { auth } from "@auth";
 import { AuthTokenI } from "@interfaces/props";
@@ -80,8 +78,6 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
   const storeId = Number(searchParams.store);
 
   let serviceData = null;
-  let paymentCards = null;
-  let fiscalData = null;
   let planData = null;
   let userId = null;
   let currentSubscription = null;
@@ -146,37 +142,6 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
       userId = userResponse?.data?.user_id || null;
       serviceData = serviceResponse.data;
 
-      // Parallelize dependent API calls (require serviceData)
-      const promises: Promise<{ type: string; data: any }>[] = [];
-
-      if (serviceData?.services?.payments?.payment_id) {
-        promises.push(
-          getPaymentCards(serviceData.services.payments.payment_id)
-            .then(res => ({ type: 'cards', data: res }))
-        );
-      }
-
-      if (serviceData?.id_seller) {
-        promises.push(
-          getFiscalData(serviceData.id_seller)
-            .then(res => ({ type: 'fiscal', data: res }))
-        );
-      }
-
-      // Wait for all dependent calls to complete
-      if (promises.length > 0) {
-        const results = await Promise.all(promises);
-        const cardsResult = results.find(r => r.type === 'cards');
-        const fiscalResult = results.find(r => r.type === 'fiscal');
-
-        if (cardsResult) {
-          paymentCards = cardsResult.data.data || [];
-        }
-        if (fiscalResult) {
-          fiscalData = fiscalResult.data;
-        }
-      }
-
       // Process current subscription response
       if (currentSubResponse?.data?.subscription) {
         currentSubscription = currentSubResponse.data.subscription;
@@ -228,8 +193,6 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
     <CheckoutForm
       searchParams={searchParams}
       serviceData={serviceData}
-      paymentCards={paymentCards}
-      fiscalData={fiscalData}
       planData={planData}
       currentSubscription={currentSubscription}
       userId={userId}
