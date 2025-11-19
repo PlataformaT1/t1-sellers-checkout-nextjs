@@ -125,3 +125,15 @@ export interface CurrentSubscriptionResponse {
   };
   metaData?: PlanMetadata;
 }
+
+// Subscription Change Preview interfaces
+// Placeholder structure - will be updated with actual API response
+export interface SubscriptionChangePreviewResponse {
+  data?: {
+    downgrade_date?: string; // Date when downgrade will take effect
+    credit_balance?: number; // "saldo a favor" for upgrades
+    [key: string]: any; // Allow additional fields
+  };
+  metaData?: PlanMetadata;
+  message?: string;
+}

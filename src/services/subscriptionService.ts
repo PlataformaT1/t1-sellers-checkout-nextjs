@@ -1,6 +1,6 @@
 'use server';
 
-import { GetPlanResponse, CreateSubscriptionRequest, CreateSubscriptionResponse, CurrentSubscriptionResponse } from "@interfaces/subscription";
+import { GetPlanResponse, CreateSubscriptionRequest, CreateSubscriptionResponse, CurrentSubscriptionResponse, SubscriptionChangePreviewResponse } from "@interfaces/subscription";
 
 const url = process.env.SUBSCRIPTION_URL;
 
@@ -242,6 +242,75 @@ export const updateSubscriptionPaymentMethodAction = async (
     return {
       success: false,
       error: 'Error al actualizar el método de pago. Por favor, intenta nuevamente.'
+    };
+  }
+};
+
+export interface PreviewSubscriptionState {
+  success: boolean;
+  error?: string;
+  data?: SubscriptionChangePreviewResponse;
+}
+
+export const previewSubscriptionChangeAction = async (
+  prevState: PreviewSubscriptionState | undefined,
+  formData: {
+    subscriptionId: string;
+    newPlanId?: string;
+    billingCycle: string;
+  }
+): Promise<PreviewSubscriptionState> => {
+  try {
+    // Build request body with preview flag
+    const requestBody: {
+      new_plan_id?: string;
+      new_billing_cycle: string;
+      preview: boolean;
+    } = {
+      new_billing_cycle: formData.billingCycle,
+      preview: true
+    };
+
+    // Only include new_plan_id if it's provided (plan change)
+    if (formData.newPlanId) {
+      requestBody.new_plan_id = formData.newPlanId;
+    }
+
+    console.log('Previewing subscription change with:', requestBody);
+
+    const response = await fetch(`${url}/suscriptions/subscriptions/${formData.subscriptionId}/change`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('SUBSCRIPTION PREVIEW URL', `${url}/suscriptions/subscriptions/${formData.subscriptionId}/change`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Error previewing subscription change:', error);
+
+      const errorMessage = error?.metaData?.message || error?.message || 'Error al obtener la vista previa';
+
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+
+    const result: SubscriptionChangePreviewResponse = await response.json();
+
+    return {
+      success: true,
+      data: result
+    };
+  } catch (error) {
+    console.error('Error previewing subscription change:', error);
+    return {
+      success: false,
+      error: 'Error al obtener la vista previa. Por favor, intenta nuevamente.'
     };
   }
 };

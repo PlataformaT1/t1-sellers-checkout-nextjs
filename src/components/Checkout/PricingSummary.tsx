@@ -4,6 +4,7 @@ import { PlanData } from '@interfaces/checkout';
 import Image from 'next/image';
 import imgInfoIcon from '@assets/icons/info-icon.svg';
 import Divider from '@mui/material/Divider';
+import { numberFormat } from '@utils/utils';
 
 interface PricingSummaryProps {
   planData: PlanData;
@@ -26,7 +27,7 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
             </p>
             <div className="content-stretch flex gap-[8px] lg:gap-[15px] items-center relative shrink-0 w-full justify-center lg:justify-start">
               <p className="font-bold leading-[normal] relative shrink-0 text-[#4c4c4c] text-[36px] lg:text-[48px] text-nowrap whitespace-pre">
-                ${planData.price.toFixed(2)}
+                {numberFormat(planData.price)}
               </p>
               <div className="flex flex-col font-medium h-[38px] lg:h-[50px] justify-end leading-[0] relative shrink-0 text-[17px] lg:text-[20px] text-[#4c4c4c] w-[105px]">
                 <p className="leading-[normal]">{planData.currency} / {planData.period}</p>
@@ -53,7 +54,7 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
               </div>
               <p className="basis-0 font-medium grow leading-[normal] min-h-px min-w-px relative shrink-0 text-[12px] text-[#2180ff]">
                 <span>Tu suscripción a {planData.downgradeNotice.newPlanName} por </span>
-                <span className="font-bold">${planData.total.toFixed(2)}</span>
+                <span className="font-bold">{numberFormat(planData.total)}</span>
                 <span> aplicará a partir del </span>
                 <span className="font-bold">{planData.downgradeNotice.effectiveDate}</span>
                 <span>, hasta entonces mantendrás tu {planData.downgradeNotice.currentPlanName}</span>
@@ -74,7 +75,7 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
             Subtotal
           </p>
           <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[75.389px]">
-            ${planData.subtotal.toFixed(2)}
+            {numberFormat(planData.subtotal)}
           </p>
         </div>
         {/* Credit line - only show for upgrades/downgrades */}
@@ -86,7 +87,7 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
                 {planData.credit.label}
               </p>
               <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[75.389px]">
-                ${planData.credit.amount.toFixed(2)}
+                {numberFormat(planData.credit.amount)}
               </p>
             </div>
           </>
@@ -101,7 +102,7 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
             Impuestos (IVA)
           </p>
           <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[60.056px]">
-            ${planData.tax.toFixed(2)}
+            {numberFormat(planData.tax)}
           </p>
         </div>
         <div className="h-px relative shrink-0 w-full">
@@ -114,7 +115,7 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
             Total
           </p>
           <p className="leading-[30px] relative shrink-0 text-right w-[88.167px]">
-            ${planData.total.toFixed(2)}
+            {numberFormat(planData.total)}
           </p>
         </div>
         </div>
