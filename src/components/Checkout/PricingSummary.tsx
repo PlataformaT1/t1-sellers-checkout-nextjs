@@ -2,9 +2,8 @@ import React from 'react';
 import T1StoreLogo from './T1StoreLogo';
 import { PlanData } from '@interfaces/checkout';
 import Image from 'next/image';
-
-const imgHr = "http://localhost:3845/assets/37bed75e02f5b46466d7b3e5774137f405e8096b.svg";
-const imgInfoIcon = "http://localhost:3845/assets/1efde14058c507a7078922a566f69e86372be126.svg";
+import imgInfoIcon from '@assets/icons/info-icon.svg';
+import Divider from '@mui/material/Divider';
 
 interface PricingSummaryProps {
   planData: PlanData;
@@ -12,7 +11,7 @@ interface PricingSummaryProps {
 
 export default function PricingSummary({ planData }: PricingSummaryProps) {
   return (
-    <div className="content-stretch flex flex-col gap-[20px] lg:gap-[35px] items-start lg:items-start items-center relative shrink-0">
+    <div className="content-stretch flex flex-col gap-[20px] lg:gap-[35px] items-start lg:items-start items-center relative shrink-0 w-full">
       {/* Logo - only show on desktop */}
       <div className="hidden lg:block">
         <T1StoreLogo />
@@ -54,7 +53,7 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
               </div>
               <p className="basis-0 font-medium grow leading-[normal] min-h-px min-w-px relative shrink-0 text-[12px] text-[#2180ff]">
                 <span>Tu suscripción a {planData.downgradeNotice.newPlanName} por </span>
-                <span className="font-bold">${planData.downgradeNotice.newPlanPrice.toFixed(2)}</span>
+                <span className="font-bold">${planData.total.toFixed(2)}</span>
                 <span> aplicará a partir del </span>
                 <span className="font-bold">{planData.downgradeNotice.effectiveDate}</span>
                 <span>, hasta entonces mantendrás tu {planData.downgradeNotice.currentPlanName}</span>
@@ -65,12 +64,12 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
 
         {/* Price Breakdown */}
         <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
-        <div className="h-px relative shrink-0 w-[442.827px]">
+        <div className="h-px relative shrink-0 w-full">
           <div className="absolute inset-0">
-            <img alt="" className="block max-w-none size-full" src={imgHr} />
+            <Divider />
           </div>
         </div>
-        <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-[428.358px]">
+        <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
           <p className="font-normal leading-[normal] relative shrink-0 w-[61.333px]">
             Subtotal
           </p>
@@ -81,12 +80,8 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
         {/* Credit line - only show for upgrades/downgrades */}
         {planData.credit && (
           <>
-            <div className="h-px relative shrink-0 w-[442.827px]">
-              <div className="absolute inset-0">
-                <img alt="" className="block max-w-none size-full" src={imgHr} />
-              </div>
-            </div>
-            <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-[428.358px]">
+            <Divider />
+            <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
               <p className="font-normal leading-[normal] relative shrink-0 text-nowrap whitespace-pre">
                 {planData.credit.label}
               </p>
@@ -96,12 +91,12 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
             </div>
           </>
         )}
-        <div className="h-px relative shrink-0 w-[442.827px]">
+        <div className="h-px relative shrink-0 w-full">
           <div className="absolute inset-0">
-            <img alt="" className="block max-w-none size-full" src={imgHr} />
+           <Divider />
           </div>
         </div>
-        <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-[429.056px]">
+        <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
           <p className="font-normal leading-[normal] relative shrink-0 w-[112.444px]">
             Impuestos (IVA)
           </p>
@@ -109,12 +104,12 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
             ${planData.tax.toFixed(2)}
           </p>
         </div>
-        <div className="h-px relative shrink-0 w-[442.827px]">
+        <div className="h-px relative shrink-0 w-full">
           <div className="absolute inset-0">
-            <img alt="" className="block max-w-none size-full" src={imgHr} />
+            <Divider />
           </div>
         </div>
-        <div className="content-stretch flex font-bold items-center justify-between relative shrink-0 text-[#4c4c4c] text-[14px] w-[429.335px]">
+        <div className="content-stretch flex font-bold items-center justify-between relative shrink-0 text-[#4c4c4c] text-[14px] w-full">
           <p className="leading-[normal] relative shrink-0 w-[44.722px]">
             Total
           </p>
