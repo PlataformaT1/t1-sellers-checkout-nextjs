@@ -144,10 +144,15 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
 
       // Process current subscription response
       if (currentSubResponse?.data?.subscription) {
-        currentSubscription = currentSubResponse.data.subscription;
+        const currentPlan = currentSubResponse.data.plan;
+
+        // Add plan name to subscription object
+        currentSubscription = {
+          ...currentSubResponse.data.subscription,
+          plan_name: currentPlan?.display_name
+        };
 
         // Get current plan pricing based on billing cycle
-        const currentPlan = currentSubResponse.data.plan;
         const currentCountryData = currentPlan?.country_availability?.find((c: { country_code: string }) => c.country_code === 'MX');
 
         if (currentCountryData) {
@@ -162,7 +167,15 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
             let effectiveDate = '';
             if (currentSubscription.current_period_end) {
               const date = new Date(currentSubscription.current_period_end);
-              const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
+              const currentYear = new Date().getFullYear();
+              const dateYear = date.getFullYear();
+
+              // Include year if it's different from current year
+              const options: Intl.DateTimeFormatOptions = {
+                day: 'numeric',
+                month: 'short',
+                ...(dateYear !== currentYear && { year: 'numeric' })
+              };
               effectiveDate = date.toLocaleDateString('es-ES', options);
             }
 
