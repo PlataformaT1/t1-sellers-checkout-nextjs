@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Providers from '@components/Layout/providers'
 
 export const metadata: Metadata = {
-  title: 'Workspace',
-  description: 'T1 ecosystem workspace',
+  title: 'Checkout',
+  description: 'T1 sellers checkout',
 }
 
 export default function RootLayout({
