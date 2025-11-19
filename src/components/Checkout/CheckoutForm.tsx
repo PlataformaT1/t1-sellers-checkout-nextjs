@@ -10,7 +10,7 @@ import MobileHeader from './MobileHeader';
 import MobileFooter from './MobileFooter';
 import { CheckoutFormData, CheckoutFormProps, PlanData, SavedCard } from '@interfaces/checkout';
 import { createPaymentCardAction } from '@services/paymentMethodsService';
-import { createSubscriptionAction, changeSubscriptionAction, updateSubscriptionPaymentMethodAction } from '@services/subscriptionService';
+import { createSubscriptionAction, changeSubscriptionAction, updateSubscriptionPaymentMethodAction, previewSubscriptionChangeAction } from '@services/subscriptionService';
 import { PaymentMethod } from '@interfaces/paymentMethods';
 import { saveFiscalDataAction } from '@services/fiscalDataService';
 
@@ -100,6 +100,12 @@ export default function CheckoutForm({
   // Action state for payment method update
   const [updatePaymentState, updatePaymentAction, updatePaymentPending] = useActionState(
     updateSubscriptionPaymentMethodAction,
+    undefined
+  );
+
+  // Action state for subscription preview
+  const [previewState, previewAction, previewPending] = useActionState(
+    previewSubscriptionChangeAction,
     undefined
   );
 
@@ -217,6 +223,22 @@ export default function CheckoutForm({
     ? paymentCards.map(convertToSavedCard)
     : [];
 
+  // Fetch subscription change preview at component mount
+  useEffect(() => {
+    console.log(currentSubscription);
+    // Only fetch preview if user has an existing subscription and plan data is available
+    if (currentSubscription && fetchedPlanData) {
+      console.log('Fetching subscription change preview...');
+      startTransition(() => {
+        previewAction({
+          subscriptionId: currentSubscription.cronos_subscription_id,
+          newPlanId: fetchedPlanData.id,
+          billingCycle: fetchedPlanData.cycle
+        });
+      });
+    }
+  }, []); // Empty dependency array - only run once at mount
+
   // Handle successful card creation - then create subscription
   useEffect(() => {
     if (createCardState?.success && pendingSubscription) {
@@ -321,6 +343,19 @@ export default function CheckoutForm({
       setPendingPaymentOnlyUpdate(false);
     }
   }, [updatePaymentState, pendingUpgradeAfterPaymentUpdate, pendingPaymentOnlyUpdate, currentSubscription, fetchedPlanData, redirectUrl]);
+
+  // Handle preview subscription change response
+  useEffect(() => {
+    console.log(previewState);
+    if (previewState?.success && previewState.data) {
+      console.log('Preview data received:', previewState.data);
+      // Preview data is now available in previewState.data
+      // You can use it to display downgrade date or "saldo a favor"
+    } else if (previewState && !previewState.success) {
+      console.error('Failed to get preview:', previewState.error);
+      // Preview failed - not critical, just log it
+    }
+  }, [previewState]);
 
   // Handle fiscal data save success - proceed with subscription/card creation
   useEffect(() => {
