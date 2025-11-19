@@ -11,7 +11,7 @@ interface PricingSummaryProps {
 
 export default function PricingSummary({ planData }: PricingSummaryProps) {
   return (
-    <div className="content-stretch flex flex-col gap-[20px] lg:gap-[35px] items-start lg:items-start items-center relative shrink-0 w-[80%]">
+    <div className="content-stretch flex flex-col gap-[20px] lg:gap-[35px] items-start lg:items-start items-center relative shrink-0 w-full">
       {/* Logo - only show on desktop */}
       <div className="hidden lg:block">
         <T1StoreLogo />
