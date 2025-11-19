@@ -573,7 +573,7 @@ export default function CheckoutForm({
           className="flex flex-col lg:flex-row gap-[24px] lg:gap-[80px] w-full lg:max-w-[1290px] flex-1"
         >
           {/* Left Panel - Pricing Summary (Desktop) / Plan Info (Mobile) */}
-          <div className="flex justify-center lg:justify-end px-[14px] lg:px-0 pt-[12px] pb-[20px] lg:pt-0 border-b border-[#e7e7e7] lg:border-b-0">
+          <div className="flex justify-center lg:justify-start px-[14px] lg:px-0 pt-[12px] pb-[20px] lg:pt-0 border-b border-[#e7e7e7] lg:border-b-0">
             <PricingSummary planData={planData} />
           </div>
 

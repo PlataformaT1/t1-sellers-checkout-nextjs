@@ -1,9 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
-
-const imgT1Logo = "http://localhost:3845/assets/10e741a83a1e33c7f894449df9b236e840d91ae0.svg";
-const imgChevronDown = "http://localhost:3845/assets/e890fa5c22c12645713c131086cd29ef5120a8c6.svg";
-
+import imgT1Logo from '@assets/logos/t1.svg';
+import imgChevronDown from '@assets/icons/chevron-down.svg';
 interface MobileHeaderProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -41,14 +39,14 @@ export default function MobileHeader({ isOpen, onToggle }: MobileHeaderProps) {
         <div className="flex items-center justify-center w-[16px] h-[16px]">
           <div
             className={`transition-transform duration-300 ${
-              isOpen ? 'rotate-[90deg]' : 'rotate-[270deg]'
+              isOpen ? 'rotate-[180deg]' : 'rotate-[360deg]'
             }`}
           >
             <Image
               src={imgChevronDown}
               alt="Chevron"
-              width={5}
-              height={9}
+              width={9}
+              height={8}
               className="block"
             />
           </div>
