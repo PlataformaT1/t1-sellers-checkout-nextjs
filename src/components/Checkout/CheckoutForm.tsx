@@ -417,7 +417,6 @@ export default function CheckoutForm({
 
   // Handle preview subscription change response
   useEffect(() => {
-    console.log(previewState);
     if (previewState?.success && previewState.data) {
       console.log('Preview data received:', previewState.data);
 
