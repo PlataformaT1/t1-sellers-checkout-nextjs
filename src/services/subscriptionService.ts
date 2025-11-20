@@ -81,7 +81,7 @@ export const createSubscriptionAction = async (
       shop_id: formData.shopId,
       service_type: "store",
       plan_id: formData.planId,
-      card_id: '68d2ff2562eb8bb2adc84a7e',
+      card_id: formData.cardId,
       payment_method: "tarjeta",
       billing_cycle: formData.billingCycle,
       country_code: "MX",
