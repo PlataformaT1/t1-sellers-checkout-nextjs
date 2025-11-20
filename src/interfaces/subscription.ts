@@ -127,12 +127,47 @@ export interface CurrentSubscriptionResponse {
 }
 
 // Subscription Change Preview interfaces
-// Placeholder structure - will be updated with actual API response
+export interface PreviewPrice {
+  current_price?: {
+    active: boolean;
+    amount: number;
+    currency: string;
+    id: string;
+    nickname: string;
+    product_id: string;
+    usage_type: string;
+  };
+  new_price: {
+    active: boolean;
+    amount: number;
+    currency: string;
+    id: string;
+    nickname: string;
+    product_id: string;
+    usage_type: string;
+  };
+  execution_date?: string;
+  prorated_amount?: number;
+  remaining_days?: number;
+  metric?: any;
+}
+
 export interface SubscriptionChangePreviewResponse {
   data?: {
-    downgrade_date?: string; // Date when downgrade will take effect
-    credit_balance?: number; // "saldo a favor" for upgrades
-    [key: string]: any; // Allow additional fields
+    preview: {
+      code: number;
+      datetime: string;
+      preview: {
+        current_subscription_period: string;
+        merchant_id: string;
+        new_subscription_period: string;
+        plan_type: string;
+        prices: PreviewPrice[];
+        subscription_id: string;
+        total_amount: number;
+      };
+      status: string;
+    };
   };
   metaData?: PlanMetadata;
   message?: string;

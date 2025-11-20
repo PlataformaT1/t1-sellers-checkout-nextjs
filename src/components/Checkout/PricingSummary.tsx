@@ -4,13 +4,15 @@ import { PlanData } from '@interfaces/checkout';
 import Image from 'next/image';
 import imgInfoIcon from '@assets/icons/info-icon.svg';
 import Divider from '@mui/material/Divider';
+import { Skeleton } from '@mui/material';
 import { numberFormat } from '@utils/utils';
 
 interface PricingSummaryProps {
   planData: PlanData;
+  isLoadingPreview?: boolean;
 }
 
-export default function PricingSummary({ planData }: PricingSummaryProps) {
+export default function PricingSummary({ planData, isLoadingPreview = false }: PricingSummaryProps) {
   return (
     <div className="content-stretch flex flex-col gap-[20px] lg:gap-[35px] items-start lg:items-start items-center relative shrink-0 w-full">
       {/* Logo - only show on desktop */}
@@ -64,61 +66,67 @@ export default function PricingSummary({ planData }: PricingSummaryProps) {
         )}
 
         {/* Price Breakdown */}
-        <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
-        <div className="h-px relative shrink-0 w-full">
-          <div className="absolute inset-0">
-            <Divider />
+        {isLoadingPreview ? (
+          <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+            <Skeleton variant="rectangular" width="100%" height={150} sx={{ borderRadius: '10px' }} />
           </div>
-        </div>
-        <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
-          <p className="font-normal leading-[normal] relative shrink-0 w-[61.333px]">
-            Subtotal
-          </p>
-          <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[75.389px]">
-            {numberFormat(planData.subtotal)}
-          </p>
-        </div>
-        {/* Credit line - only show for upgrades/downgrades */}
-        {planData.credit && (
-          <>
-            <Divider />
-            <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
-              <p className="font-normal leading-[normal] relative shrink-0 text-nowrap whitespace-pre">
-                {planData.credit.label}
-              </p>
-              <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[75.389px]">
-                {numberFormat(planData.credit.amount)}
-              </p>
+        ) : (
+          <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
+          <div className="h-px relative shrink-0 w-full">
+            <div className="absolute inset-0">
+              <Divider />
             </div>
-          </>
+          </div>
+          <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
+            <p className="font-normal leading-[normal] relative shrink-0 w-[61.333px]">
+              Subtotal
+            </p>
+            <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[75.389px]">
+              {numberFormat(planData.subtotal)}
+            </p>
+          </div>
+          {/* Credit line - only show for upgrades with prorated amount */}
+          {planData.credit && (
+            <>
+              <Divider className='w-full' />
+              <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
+                <p className="font-normal leading-[normal] relative shrink-0 text-nowrap whitespace-pre">
+                  {planData.credit.label}
+                </p>
+                <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[75.389px]">
+                  {numberFormat(planData.credit.amount)}
+                </p>
+              </div>
+            </>
+          )}
+          <div className="h-px relative shrink-0 w-full">
+            <div className="absolute inset-0">
+             <Divider />
+            </div>
+          </div>
+          <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
+            <p className="font-normal leading-[normal] relative shrink-0 w-[112.444px]">
+              Impuestos (IVA)
+            </p>
+            <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[60.056px]">
+              {numberFormat(planData.tax)}
+            </p>
+          </div>
+          <div className="h-px relative shrink-0 w-full">
+            <div className="absolute inset-0">
+              <Divider />
+            </div>
+          </div>
+          <div className="content-stretch flex font-bold items-center justify-between relative shrink-0 text-[#4c4c4c] text-[14px] w-full">
+            <p className="leading-[normal] relative shrink-0 w-[44.722px]">
+              Total
+            </p>
+            <p className="leading-[30px] relative shrink-0 text-right w-[88.167px]">
+              {numberFormat(planData.total)}
+            </p>
+          </div>
+          </div>
         )}
-        <div className="h-px relative shrink-0 w-full">
-          <div className="absolute inset-0">
-           <Divider />
-          </div>
-        </div>
-        <div className="content-stretch flex items-center justify-between relative shrink-0 text-[#4c4c4c] text-[12px] w-full">
-          <p className="font-normal leading-[normal] relative shrink-0 w-[112.444px]">
-            Impuestos (IVA)
-          </p>
-          <p className="font-semibold leading-[30px] relative shrink-0 text-right w-[60.056px]">
-            {numberFormat(planData.tax)}
-          </p>
-        </div>
-        <div className="h-px relative shrink-0 w-full">
-          <div className="absolute inset-0">
-            <Divider />
-          </div>
-        </div>
-        <div className="content-stretch flex font-bold items-center justify-between relative shrink-0 text-[#4c4c4c] text-[14px] w-full">
-          <p className="leading-[normal] relative shrink-0 w-[44.722px]">
-            Total
-          </p>
-          <p className="leading-[30px] relative shrink-0 text-right w-[88.167px]">
-            {numberFormat(planData.total)}
-          </p>
-        </div>
-        </div>
       </div>
     </div>
   );

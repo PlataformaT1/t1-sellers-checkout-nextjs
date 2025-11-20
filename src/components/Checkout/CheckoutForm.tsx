@@ -1,6 +1,6 @@
 'use client'
 
-import React, { startTransition, useActionState, useEffect, useState } from 'react';
+import React, { startTransition, useActionState, useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Drawer } from '@mui/material';
 import PricingSummary from './PricingSummary';
@@ -14,6 +14,7 @@ import { createSubscriptionAction, changeSubscriptionAction, updateSubscriptionP
 import { PaymentMethod } from '@interfaces/paymentMethods';
 import { saveFiscalDataAction } from '@services/fiscalDataService';
 import { getFiscalDataAction } from '@services/walletService';
+import { numberFormat } from '@utils/utils';
 
 export default function CheckoutForm({
   searchParams,
@@ -27,11 +28,14 @@ export default function CheckoutForm({
   userEmail = '',
   userPhone = ''
 }: CheckoutFormProps) {
-  // Get plan data from fetched plan data
-  const getPlanData = (): PlanData => {
+  // State to store prorated amount from preview (for upgrades)
+  const [proratedAmount, setProratedAmount] = useState<number | null>(null);
+
+  // Get plan data from fetched plan data (memoized to update when proratedAmount changes)
+  const planData = useMemo((): PlanData => {
     // Plan data should always be provided by the page after validation
     if (fetchedPlanData) {
-      return {
+      const data: PlanData = {
         name: fetchedPlanData.name,
         price: fetchedPlanData.price,
         subtotal: fetchedPlanData.subtotal,
@@ -41,6 +45,21 @@ export default function CheckoutForm({
         period: fetchedPlanData.period,
         ...(fetchedPlanData.downgradeNotice && { downgradeNotice: fetchedPlanData.downgradeNotice })
       };
+
+      // Add credit from prorated amount if available (for upgrades)
+      if (proratedAmount !== null && proratedAmount > 0) {
+        // Get current plan name for the credit label
+        const currentPlanName = currentSubscription?.plan_name || 'plan actual';
+
+        data.credit = {
+          label: `Créditos por ${currentPlanName}`,
+          amount: -proratedAmount // Negative because it's a credit
+        };
+        // Adjust total by subtracting the prorated amount
+        data.total = data.total - proratedAmount;
+      }
+
+      return data;
     }
 
     // This should never happen as the page validates params first
@@ -54,9 +73,7 @@ export default function CheckoutForm({
       currency: 'MXN',
       period: 'Mes'
     };
-  };
-
-  const planData = getPlanData();
+  }, [fetchedPlanData, proratedAmount, currentSubscription]);
 
   // Extract service info from props
   const sellerId = serviceData?.id_seller || 0;
@@ -247,10 +264,8 @@ export default function CheckoutForm({
 
   // Fetch subscription change preview at component mount
   useEffect(() => {
-    console.log(currentSubscription);
     // Only fetch preview if user has an existing subscription and plan data is available
     if (currentSubscription && fetchedPlanData) {
-      console.log('Fetching subscription change preview...');
       startTransition(() => {
         previewAction({
           subscriptionId: currentSubscription.cronos_subscription_id,
@@ -402,11 +417,17 @@ export default function CheckoutForm({
 
   // Handle preview subscription change response
   useEffect(() => {
-    console.log(previewState);
     if (previewState?.success && previewState.data) {
       console.log('Preview data received:', previewState.data);
-      // Preview data is now available in previewState.data
-      // You can use it to display downgrade date or "saldo a favor"
+
+      // Extract prorated_amount from the first price item that has it
+      const preview = previewState.data.data?.preview?.preview;
+      if (preview?.prices && preview.prices.length > 0) {
+        const priceWithProration = preview.prices.find(price => price.prorated_amount !== undefined);
+        if (priceWithProration && priceWithProration.prorated_amount) {
+          setProratedAmount(priceWithProration.prorated_amount);
+        }
+      }
     } else if (previewState && !previewState.success) {
       console.error('Failed to get preview:', previewState.error);
       // Preview failed - not critical, just log it
@@ -665,7 +686,10 @@ export default function CheckoutForm({
         >
           {/* Left Panel - Pricing Summary (Desktop) / Plan Info (Mobile) */}
           <div className="flex justify-center lg:justify-start px-[14px] lg:px-0 pt-[12px] pb-[20px] lg:pt-0 border-b border-[#e7e7e7] lg:border-b-0 w-[40%]">
-            <PricingSummary planData={planData} />
+            <PricingSummary
+              planData={planData}
+              isLoadingPreview={currentSubscription ? previewPending : false}
+            />
           </div>
 
           {/* Right Panel - Payment Form */}
@@ -719,16 +743,16 @@ export default function CheckoutForm({
             {/* Subtotal */}
             <div className="flex items-center justify-between text-[#4c4c4c] text-[12px]">
               <p className="font-normal leading-[normal]">Subtotal</p>
-              <p className="font-semibold leading-[30px] text-right">${planData.subtotal.toFixed(2)}</p>
+              <p className="font-semibold leading-[30px] text-right">{numberFormat(planData.subtotal)}</p>
             </div>
             <div className="h-px w-full bg-[#e7e7e7]" />
 
-            {/* Credit line - only show for upgrades/downgrades */}
+            {/* Credit line - only show for upgrades with prorated amount */}
             {planData.credit && (
               <>
                 <div className="flex items-center justify-between text-[#4c4c4c] text-[12px]">
                   <p className="font-normal leading-[normal]">{planData.credit.label}</p>
-                  <p className="font-semibold leading-[30px] text-right">${planData.credit.amount.toFixed(2)}</p>
+                  <p className="font-semibold leading-[30px] text-right">{numberFormat(planData.credit.amount)}</p>
                 </div>
                 <div className="h-px w-full bg-[#e7e7e7]" />
               </>
@@ -737,14 +761,14 @@ export default function CheckoutForm({
             {/* Impuestos (IVA) */}
             <div className="flex items-center justify-between text-[#4c4c4c] text-[12px]">
               <p className="font-normal leading-[normal]">Impuestos (IVA)</p>
-              <p className="font-semibold leading-[30px] text-right">${planData.tax.toFixed(2)}</p>
+              <p className="font-semibold leading-[30px] text-right">{numberFormat(planData.tax)}</p>
             </div>
             <div className="h-px w-full bg-[#e7e7e7]" />
 
             {/* Total */}
             <div className="flex items-center justify-between text-[#4c4c4c] text-[14px] font-bold">
               <p className="leading-[normal]">Total</p>
-              <p className="leading-[30px] text-right">${planData.total.toFixed(2)}</p>
+              <p className="leading-[30px] text-right">{numberFormat(planData.total)}</p>
             </div>
           </div>
         </div>
