@@ -50,11 +50,11 @@ export interface AddPaymentCardFormData {
   cardId?: string;
   name: string;
   country: string;
-  address: string;
-  neighborhood: string;
-  zip: string;
+  address?: string;
+  neighborhood?: string;
+  zip?: string;
   phone: string;
-  city: string;
+  city?: string;
   cardNumber: string;
   state?: string;
   deadline: string; // MM/YY format
