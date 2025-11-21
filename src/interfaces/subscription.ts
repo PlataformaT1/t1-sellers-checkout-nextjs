@@ -116,6 +116,7 @@ export interface CurrentSubscription {
   trial_ends_at?: string;
   current_period_end?: string;
   created_at?: string;
+  payment_provider?: string;
 }
 
 export interface CurrentSubscriptionResponse {

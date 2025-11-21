@@ -143,7 +143,7 @@ export default async function CheckoutPage(props: CheckoutPageProps) {
       serviceData = serviceResponse.data;
 
       // Process current subscription response
-      if (currentSubResponse?.data?.subscription) {
+      if (currentSubResponse?.data?.subscription && currentSubResponse?.data?.subscription.payment_provider !== 'free') {
         const currentPlan = currentSubResponse.data.plan;
 
         // Add plan name to subscription object
