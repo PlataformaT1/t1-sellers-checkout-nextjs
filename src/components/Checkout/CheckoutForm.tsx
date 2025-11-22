@@ -205,7 +205,7 @@ export default function CheckoutForm({
   const needsPaymentMethodUpdate = (selectedCardId: string): boolean => {
     // Only relevant if user has current subscription and is using a saved card
     if (!currentSubscription?.payment_id || !selectedCardId) {
-      return false;
+      return true;
     }
 
     // Check if selected card is different from subscription's payment method
@@ -689,6 +689,7 @@ export default function CheckoutForm({
             <PricingSummary
               planData={planData}
               isLoadingPreview={currentSubscription ? previewPending : false}
+              samePlanAndCycle={isSamePlanAndCycle()}
             />
           </div>
 

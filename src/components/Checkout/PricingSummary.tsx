@@ -10,9 +10,10 @@ import { numberFormat } from '@utils/utils';
 interface PricingSummaryProps {
   planData: PlanData;
   isLoadingPreview?: boolean;
+  samePlanAndCycle?: boolean;
 }
 
-export default function PricingSummary({ planData, isLoadingPreview = false }: PricingSummaryProps) {
+export default function PricingSummary({ planData, isLoadingPreview = false, samePlanAndCycle = false }: PricingSummaryProps) {
   return (
     <div className="content-stretch flex flex-col gap-[20px] lg:gap-[35px] items-start lg:items-start items-center relative shrink-0 w-full">
       {/* Logo - only show on desktop */}
@@ -42,7 +43,7 @@ export default function PricingSummary({ planData, isLoadingPreview = false }: P
       {/* Desktop only - Downgrade Notice and Breakdown */}
       <div className="hidden lg:flex flex-col gap-[35px] w-full">
         {/* Downgrade Notice - only show for downgrades */}
-        {planData.downgradeNotice && (
+        {(planData.downgradeNotice && !samePlanAndCycle) && (
           <div className="bg-[rgba(33,128,255,0.1)] box-border content-stretch flex gap-[12px] items-center p-[10px] relative rounded-[10px] shrink-0 w-full">
             <div className="basis-0 content-stretch flex gap-[8px] grow items-center min-h-px min-w-px relative shrink-0">
               <div className="overflow-clip relative shrink-0 size-[24px]">
