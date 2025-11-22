@@ -224,6 +224,10 @@ export default function SavedPaymentMethodForm({
     }
   };
 
+  const handleGoToLanding = (path: string) => {
+    window.open(`https://www.t1.com${path}`, '_blank');
+  };
+
   return (
     <div className="content-stretch flex flex-col lg:h-[655px] items-center justify-between relative w-full lg:w-[400px]">
       <div className="content-stretch flex flex-col gap-[25px] items-center justify-end relative shrink-0 w-full">
@@ -934,13 +938,13 @@ export default function SavedPaymentMethodForm({
           <Image src={PaymentsIcon} alt='payments' width={43} height={15} />
         </div>
         <div className="content-stretch flex font-bold gap-[16px] items-center justify-center leading-[normal] relative shrink-0 text-[10px] text-center text-nowrap w-full whitespace-pre">
-          <p className="relative shrink-0 text-[#4c4c4c] m-0">
+          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/terms-and-conditions')}>
             Términos y condiciones
           </p>
           <p className="relative shrink-0 text-[#c3c3c3] m-0">
             |
           </p>
-          <p className="relative shrink-0 text-[#4c4c4c] m-0">
+          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/legal-exception')}>
             Políticas de privacidad
           </p>
         </div>
