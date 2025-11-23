@@ -45,8 +45,7 @@ export async function getRegimenesFiscales(persona: 'FISICA' | 'MORAL'): Promise
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      },
-      cache: 'force-cache' // Cache the catalog data
+      }
     });
 
     if (!response.ok) {
@@ -72,8 +71,7 @@ export async function getUsosCFDI(persona: 'FISICA' | 'MORAL', regimen: string):
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
-      },
-      cache: 'force-cache' // Cache the catalog data
+      }
     });
 
     if (!response.ok) {
