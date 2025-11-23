@@ -1,6 +1,6 @@
 'use client'
 
-import React, { startTransition, useActionState, useEffect, useMemo, useState } from 'react';
+import React, { startTransition, useActionState, useEffect, useMemo, useState, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Drawer } from '@mui/material';
 import PricingSummary from './PricingSummary';
@@ -100,6 +100,9 @@ export default function CheckoutForm({
   // State to track if we're redirecting (keeps button disabled until redirect)
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  // State to store submitted form data for success page
+  const [submittedFormData, setSubmittedFormData] = useState<CheckoutFormData | null>(null);
+
   // Action state for card creation
   const [createCardState, createCardAction, createCardPending] = useActionState(createPaymentCardAction, undefined);
 
@@ -152,6 +155,15 @@ export default function CheckoutForm({
     getFiscalDataAction,
     undefined
   );
+
+  // Refs to track processed error states (prevent infinite loops)
+  const processedErrorStates = useRef({
+    createCard: false,
+    subscription: false,
+    change: false,
+    updatePayment: false,
+    saveFiscalData: false
+  });
 
   // Use client-side fetched data if available, otherwise fallback to props
   const activePaymentCards = getPaymentCardsState?.success && getPaymentCardsState.data
@@ -210,6 +222,25 @@ export default function CheckoutForm({
 
     // Check if selected card is different from subscription's payment method
     return selectedCardId !== currentSubscription.payment_id;
+  };
+
+  // Helper function to build success page URL
+  const buildSuccessUrl = (cardId: string, isUpdate: boolean = false): string => {
+    // Find the selected card
+    const selectedCard = activePaymentCards?.find(card => card.id === cardId);
+
+    const params = new URLSearchParams({
+      planName: planData.name,
+      subtotal: planData.subtotal.toString(),
+      tax: planData.tax.toString(),
+      total: planData.total.toString(),
+      cardBrand: selectedCard?.brand || 'mastercard',
+      cardLast4: selectedCard?.termination || '0000',
+      redirectUrl: redirectUrl,
+      isUpdate: isUpdate.toString()
+    });
+
+    return `/success?${params.toString()}`;
   };
 
   const { handleSubmit, control, formState: { errors, isValid }, setValue, trigger } = useForm<CheckoutFormData>({
@@ -314,6 +345,7 @@ export default function CheckoutForm({
   useEffect(() => {
     if (createCardState?.success && pendingSubscription) {
       console.log('Card created successfully! Creating subscription...');
+      processedErrorStates.current.createCard = false; // Reset on success
 
       // Get the new card ID from the created card
       const createdCardId = createCardState.cardId || newCardId;
@@ -334,8 +366,9 @@ export default function CheckoutForm({
 
         setPendingSubscription(false);
       }
-    } else if (createCardState && !createCardState.success) {
+    } else if (createCardState && !createCardState.success && !processedErrorStates.current.createCard) {
       console.error('Failed to create card:', createCardState.error);
+      processedErrorStates.current.createCard = true; // Mark as processed
       setPendingSubscription(false);
       // Show error dialog
       setErrorMessage(createCardState.error || 'Error al crear la tarjeta. Por favor, intenta nuevamente.');
@@ -347,44 +380,76 @@ export default function CheckoutForm({
   useEffect(() => {
     if (subscriptionState?.success) {
       console.log('Subscription created successfully! Redirecting...');
+      processedErrorStates.current.subscription = false; // Reset on success
       // Keep button disabled while redirecting
       setIsRedirecting(true);
-      // Redirect to the success URL
-      window.location.href = redirectUrl;
-    } else if (subscriptionState && !subscriptionState.success) {
+
+      // Get the card ID from submitted form data or created card
+      const cardId = submittedFormData?.savedCardId || newCardId || '';
+
+      // Redirect to the success page
+      if (cardId) {
+        window.location.href = buildSuccessUrl(cardId, false);
+      } else {
+        // Fallback to direct redirect if no card info available
+        window.location.href = redirectUrl;
+      }
+    } else if (subscriptionState && !subscriptionState.success && !processedErrorStates.current.subscription) {
       console.error('Failed to create subscription:', subscriptionState.error);
+      processedErrorStates.current.subscription = true; // Mark as processed
       // Show error dialog
       setErrorMessage(subscriptionState.error || 'Error al crear la suscripción. Por favor, intenta nuevamente.');
       setErrorDialogOpen(true);
     }
-  }, [subscriptionState, redirectUrl]);
+  }, [subscriptionState, redirectUrl, submittedFormData, newCardId, buildSuccessUrl]);
 
   // Handle change subscription success - redirect
   useEffect(() => {
     if (changeState?.success) {
       console.log('Subscription changed successfully! Redirecting...');
+      processedErrorStates.current.change = false; // Reset on success
       // Keep button disabled while redirecting
       setIsRedirecting(true);
-      // Redirect to the success URL
-      window.location.href = redirectUrl;
-    } else if (changeState && !changeState.success) {
+
+      // Get the card ID from submitted form data
+      const cardId = submittedFormData?.savedCardId || '';
+
+      // Redirect to the success page (isUpdate = true for plan changes)
+      if (cardId) {
+        window.location.href = buildSuccessUrl(cardId, true);
+      } else {
+        // Fallback to direct redirect if no card info available
+        window.location.href = redirectUrl;
+      }
+    } else if (changeState && !changeState.success && !processedErrorStates.current.change) {
       console.error('Failed to change subscription:', changeState.error);
+      processedErrorStates.current.change = true; // Mark as processed
       // Show error dialog
       setErrorMessage(changeState.error || 'Error al actualizar la suscripción. Por favor, intenta nuevamente.');
       setErrorDialogOpen(true);
     }
-  }, [changeState, redirectUrl]);
+  }, [changeState, redirectUrl, submittedFormData, buildSuccessUrl]);
 
   // Handle payment method update success - proceed with upgrade or redirect
   useEffect(() => {
     if (updatePaymentState?.success) {
+      processedErrorStates.current.updatePayment = false; // Reset on success
       // Check if this is a payment-only update (same plan + same cycle)
       if (pendingPaymentOnlyUpdate) {
         console.log('Payment method updated successfully! Redirecting...');
         // Keep button disabled while redirecting
         setIsRedirecting(true);
-        // Redirect to success URL
-        window.location.href = redirectUrl;
+
+        // Get the card ID from submitted form data
+        const cardId = submittedFormData?.savedCardId || '';
+
+        // Redirect to success page (isUpdate = true for payment updates)
+        if (cardId) {
+          window.location.href = buildSuccessUrl(cardId, true);
+        } else {
+          // Fallback to direct redirect if no card info available
+          window.location.href = redirectUrl;
+        }
         setPendingPaymentOnlyUpdate(false);
       } else if (pendingUpgradeAfterPaymentUpdate.data) {
         // This is a payment update before a plan change
@@ -404,8 +469,9 @@ export default function CheckoutForm({
         // Reset pending state
         setPendingUpgradeAfterPaymentUpdate({ data: null });
       }
-    } else if (updatePaymentState && !updatePaymentState.success) {
+    } else if (updatePaymentState && !updatePaymentState.success && !processedErrorStates.current.updatePayment) {
       console.error('Failed to update payment method:', updatePaymentState.error);
+      processedErrorStates.current.updatePayment = true; // Mark as processed
       // Show error dialog
       setErrorMessage(updatePaymentState.error || 'Error al actualizar el método de pago. Por favor, intenta nuevamente.');
       setErrorDialogOpen(true);
@@ -413,7 +479,7 @@ export default function CheckoutForm({
       setPendingUpgradeAfterPaymentUpdate({ data: null });
       setPendingPaymentOnlyUpdate(false);
     }
-  }, [updatePaymentState, pendingUpgradeAfterPaymentUpdate, pendingPaymentOnlyUpdate, currentSubscription, fetchedPlanData, redirectUrl]);
+  }, [updatePaymentState, pendingUpgradeAfterPaymentUpdate, pendingPaymentOnlyUpdate, currentSubscription, fetchedPlanData, redirectUrl, submittedFormData, buildSuccessUrl]);
 
   // Handle preview subscription change response
   useEffect(() => {
@@ -438,6 +504,7 @@ export default function CheckoutForm({
   useEffect(() => {
     if (saveFiscalDataState?.success && pendingAfterFiscalSave.type && pendingAfterFiscalSave.data) {
       console.log('Fiscal data saved successfully! Proceeding with', pendingAfterFiscalSave.type);
+      processedErrorStates.current.saveFiscalData = false; // Reset on success
 
       const data = pendingAfterFiscalSave.data;
 
@@ -509,8 +576,9 @@ export default function CheckoutForm({
 
       // Reset pending state
       setPendingAfterFiscalSave({ type: null, data: null });
-    } else if (saveFiscalDataState && !saveFiscalDataState.success) {
+    } else if (saveFiscalDataState && !saveFiscalDataState.success && !processedErrorStates.current.saveFiscalData) {
       console.error('Failed to save fiscal data:', saveFiscalDataState.error);
+      processedErrorStates.current.saveFiscalData = true; // Mark as processed
       // Show error dialog
       setErrorMessage(saveFiscalDataState.error || 'Error al guardar la información fiscal. Por favor, intenta nuevamente.');
       setErrorDialogOpen(true);
@@ -521,6 +589,9 @@ export default function CheckoutForm({
 
   const submit = (data: CheckoutFormData) => {
     console.log('Form submitted:', data);
+
+    // Store form data for success page
+    setSubmittedFormData(data);
 
     // Validate required data
     if (!userId || !fetchedPlanData) {
@@ -781,6 +852,7 @@ export default function CheckoutForm({
         onClose={() => setErrorDialogOpen(false)}
         title="Error"
         message={errorMessage}
+        redirectUrl={redirectUrl}
       />
     </>
   );
