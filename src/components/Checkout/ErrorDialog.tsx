@@ -8,9 +8,16 @@ interface ErrorDialogProps {
   onClose: () => void;
   title: string;
   message: string;
+  redirectUrl?: string;
 }
 
-export default function ErrorDialog({ open, onClose, title, message }: ErrorDialogProps) {
+export default function ErrorDialog({ open, onClose, title, message, redirectUrl }: ErrorDialogProps) {
+  const handleClose = () => {
+    onClose();
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+    }
+  };
   return (
     <Dialog
       open={open}
@@ -45,7 +52,7 @@ export default function ErrorDialog({ open, onClose, title, message }: ErrorDial
 
       <div className="flex justify-end">
         <Button
-          onClick={onClose}
+          onClick={handleClose}
           className="!w-[120px] !h-[36px]"
         >
           Cerrar

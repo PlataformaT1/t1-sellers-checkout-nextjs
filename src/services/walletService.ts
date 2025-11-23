@@ -39,8 +39,18 @@ export const request = async <T>(method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GE
 };
 
 // Helper function to map fiscal data API response to BillingInfo format
-const mapFiscalDataToBillingInfo = (fiscalData: FiscalDataI): MappedBillingInfoI => {
+// Returns null if critical fields (RFC and business name) are missing
+const mapFiscalDataToBillingInfo = (fiscalData: FiscalDataI): MappedBillingInfoI | null => {
   const { tax_information } = fiscalData;
+
+  // Validate that critical fields are present
+  const rfc = tax_information?.rfc?.trim();
+  const businessName = tax_information?.business_name?.trim() || fiscalData.business_name?.trim();
+
+  if (!rfc || !businessName) {
+    return null;
+  }
+
   const address = tax_information.address;
 
   // Format address string
@@ -61,8 +71,8 @@ const mapFiscalDataToBillingInfo = (fiscalData: FiscalDataI): MappedBillingInfoI
   };
 
   return {
-    razonSocial: tax_information.business_name || fiscalData.business_name,
-    rfc: tax_information.rfc,
+    razonSocial: businessName,
+    rfc: rfc,
     regimenFiscal: tax_information.regimen || 'No especificado',
     tipoContribuyente: tipoContribuyenteMap[tax_information.taxpayer_type] || tax_information.taxpayer_type,
     direccion: formattedAddress
@@ -80,10 +90,13 @@ export const getFiscalData = async (sellerId: number): Promise<GetFiscalDataResp
     const response = await request<FiscalDataResponseI>('GET', url);
 
     // Transform the response data to include mapped billing info
+    console.log(JSON.stringify(response));
+
     const mappedBillingInfo = response.success && response.data
       ? mapFiscalDataToBillingInfo(response.data)
       : null;
 
+    console.log('Mapped Billing Info:', mappedBillingInfo);
     return {
       ...response,
       mappedBillingInfo
@@ -102,11 +115,11 @@ export interface GetFiscalDataState {
 
 /**
  * Server action to get fiscal data for a seller
- * @param prevState - Previous state from useActionState
+ * @param _prevState - Previous state from useActionState (unused)
  * @param sellerId - The seller ID
  */
 export async function getFiscalDataAction(
-  prevState: GetFiscalDataState | undefined,
+  _prevState: GetFiscalDataState | undefined,
   sellerId: number
 ): Promise<GetFiscalDataState> {
   try {
