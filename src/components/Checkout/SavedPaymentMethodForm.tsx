@@ -58,6 +58,7 @@ export default function SavedPaymentMethodForm({
   const [loadingRegimenes, setLoadingRegimenes] = useState(false);
   const [loadingUsos, setLoadingUsos] = useState(false);
   const rfcDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const savedCardOnChangeRef = useRef<((value: string) => void) | null>(null);
 
   // Automatically show new card form when no saved cards are available
   useEffect(() => {
@@ -252,7 +253,13 @@ export default function SavedPaymentMethodForm({
               </p>
               {savedCards.length > 0 && (
                 <p
-                  onClick={() => setShowNewCardForm(false)}
+                  onClick={() => {
+                    setShowNewCardForm(false);
+                    // Reselect the first saved card as default
+                    if (savedCards[0]?.id && savedCardOnChangeRef.current) {
+                      savedCardOnChangeRef.current(savedCards[0].id);
+                    }
+                  }}
                   className="font-bold relative shrink-0 text-nowrap whitespace-pre cursor-pointer"
                 >
                   Cancelar
@@ -275,6 +282,8 @@ export default function SavedPaymentMethodForm({
                   required: showNewCardForm ? false : 'Selecciona un método de pago'
                 }}
                 render={({ field: { onChange, value } }) => {
+                  // Store onChange in ref so Cancelar button can use it
+                  savedCardOnChangeRef.current = onChange;
                   return (
                     <Select
                       value={value || ''}
@@ -629,12 +638,12 @@ export default function SavedPaymentMethodForm({
             {savedBillingInfo ? (
               /* Display saved billing info - always show if it exists */
               <div className="content-stretch flex flex-col gap-[6px] items-start justify-center relative shrink-0">
-                <p className="font-normal leading-[normal] relative shrink-0 text-[14px] text-[#4c4c4c] text-nowrap whitespace-pre">
+                <p className="font-[400] leading-[normal] relative shrink-0 text-[14px] text-[#4c4c4c] text-nowrap whitespace-pre">
                   Facturaremos tu plan a:
                 </p>
-                <p className="font-normal leading-[normal] relative shrink-0 text-[#4c4c4c] text-[14px]">
-                  <span>{savedBillingInfo.razonSocial}</span>
-                  <span>  •  RFC: {savedBillingInfo.rfc}</span>
+                <p className="relative shrink-0 text-[#4c4c4c] text-[14px]">
+                  <p className="font-[600]">{savedBillingInfo.razonSocial}</p>
+                  <p>RFC: {savedBillingInfo.rfc}</p>
                 </p>
               </div>
             ) : isFiscalDataLoading ? (
@@ -922,7 +931,7 @@ export default function SavedPaymentMethodForm({
             </p>
           )}
           {!isDisabled && (
-            <p className="font-normal leading-[normal] relative shrink-0 text-[#4c4c4c] text-[11px] text-center w-full">
+            <p className="font-[400] leading-[normal] relative shrink-0 text-[#4c4c4c] text-[11px] text-center w-full">
               Al suscribirte aceptas los términos y condiciones de pago establecidos por T1tienda.
             </p>
           )}
