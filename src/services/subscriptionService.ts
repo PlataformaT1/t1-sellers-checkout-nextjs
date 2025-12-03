@@ -102,7 +102,8 @@ export const createSubscriptionAction = async (
     });
 
     console.log('SUBSCRIPTION CREATE URL', `${url}/suscriptions/subscribe-simple`);
-
+    console.log('Suscription create response');
+    console.log(JSON.stringify(response));
     if (!response.ok) {
       const error = await response.json();
       console.error('Error creating subscription:', JSON.stringify(error));
@@ -118,7 +119,8 @@ export const createSubscriptionAction = async (
     }
 
     const result: CreateSubscriptionResponse = await response.json();
-
+    console.log('Suscription create result');
+    console.log(JSON.stringify(result));
     return {
       success: true,
       message: result.message || 'Suscripción creada exitosamente'
