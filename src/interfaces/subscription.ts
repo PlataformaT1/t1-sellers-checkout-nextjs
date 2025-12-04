@@ -149,6 +149,7 @@ export interface PreviewPrice {
   };
   execution_date?: string;
   prorated_amount?: number;
+  available_credit?: number;
   remaining_days?: number;
   metric?: any;
 }
