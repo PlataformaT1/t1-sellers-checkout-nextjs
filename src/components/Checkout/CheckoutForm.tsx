@@ -486,12 +486,12 @@ export default function CheckoutForm({
     if (previewState?.success && previewState.data) {
       console.log('Preview data received:', previewState.data);
 
-      // Extract prorated_amount from the first price item that has it
+      // Extract available_credit from the first price item that has it
       const preview = previewState.data.data?.preview?.preview;
       if (preview?.prices && preview.prices.length > 0) {
-        const priceWithProration = preview.prices.find(price => price.prorated_amount !== undefined);
-        if (priceWithProration && priceWithProration.prorated_amount) {
-          setProratedAmount(priceWithProration.prorated_amount);
+        const priceWithProration = preview.prices.find(price => price.available_credit !== undefined);
+        if (priceWithProration && priceWithProration.available_credit) {
+          setProratedAmount(priceWithProration.available_credit);
         }
       }
     } else if (previewState && !previewState.success) {
