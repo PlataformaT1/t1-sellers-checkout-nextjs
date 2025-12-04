@@ -18,8 +18,8 @@ interface SuccessViewProps {
   subtotal: number;
   tax: number;
   total: number;
-  cardBrand: string;
-  cardLast4: string;
+  cardBrand?: string;
+  cardLast4?: string;
   isUpdate: boolean;
   onContinue: () => void;
 }
@@ -44,7 +44,8 @@ export default function SuccessView({
   isUpdate,
   onContinue
 }: SuccessViewProps) {
-  const cardIcon = cardBrandIcons[cardBrand.toLowerCase()] || MasterIcon;
+  const cardIcon = cardBrand ? (cardBrandIcons[cardBrand.toLowerCase()] || MasterIcon) : null;
+  const hasCardInfo = cardBrand && cardLast4 && cardLast4 !== '0000';
   const successMessage = isUpdate
     ? `¡Se actualizó tu suscripción a ${planName}!`
     : `¡Se completó tu suscripción a ${planName}!`;
@@ -75,21 +76,25 @@ export default function SuccessView({
 
         {/* Payment summary box */}
         <div className="bg-white border border-[#e7e7e7] rounded-[10px] w-full max-w-[330px] lg:max-w-[460px] px-[16px] lg:px-[23px] py-[12px] lg:py-[18px] flex flex-col gap-[6px] lg:gap-[10px] mt-[44px]">
-          {/* Payment method */}
-          <div className="flex items-center justify-between text-[12px] lg:text-[14px] text-[#4c4c4c] w-full">
-            <p className="font-normal leading-[normal]">Método de pago</p>
-            <div className="flex items-center gap-[10px]">
-              <Image
-                src={cardIcon}
-                alt={cardBrand}
-                width={25}
-                height={16}
-              />
-              <p className="font-semibold leading-[30px] text-right whitespace-nowrap">**** {cardLast4}</p>
-            </div>
-          </div>
+          {/* Payment method - only show if card info is available */}
+          {hasCardInfo && cardIcon && (
+            <>
+              <div className="flex items-center justify-between text-[12px] lg:text-[14px] text-[#4c4c4c] w-full">
+                <p className="font-normal leading-[normal]">Método de pago</p>
+                <div className="flex items-center gap-[10px]">
+                  <Image
+                    src={cardIcon}
+                    alt={cardBrand || ''}
+                    width={25}
+                    height={16}
+                  />
+                  <p className="font-semibold leading-[30px] text-right whitespace-nowrap">**** {cardLast4}</p>
+                </div>
+              </div>
 
-          <Divider sx={{ borderColor: '#e7e7e7' }} />
+              <Divider sx={{ borderColor: '#e7e7e7' }} />
+            </>
+          )}
 
           {/* Subtotal */}
           <div className="flex items-center justify-between text-[12px] lg:text-[14px] text-[#4c4c4c] w-full">
