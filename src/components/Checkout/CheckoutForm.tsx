@@ -654,15 +654,23 @@ export default function CheckoutForm({
 
       setPendingAfterFiscalSave({ type: nextAction, data });
 
+      // Derive taxpayer_type from RFC length (13 chars = fisica, 12 chars = moral)
+      const taxpayerType: 'fisica' | 'moral' = data.rfc!.length === 13 ? 'fisica' : 'moral';
+
       startTransition(() => {
         dispatchSaveFiscalData({
           storeId: sellerId,
           data: {
-            taxpayer_type: data.taxRegime as 'fisica' | 'moral',
+            taxpayer_type: taxpayerType,
             rfc: data.rfc!,
             business_name: data.billingName!,
             address: {
-              zip: data.postalCode!
+              zip: data.postalCode!,
+              outer_number: '',
+              state: '',
+              street: '',
+              suburb: '',
+              town: ''
             }
           }
         });
