@@ -225,20 +225,24 @@ export default function CheckoutForm({
   };
 
   // Helper function to build success page URL
-  const buildSuccessUrl = (cardId: string, isUpdate: boolean = false): string => {
-    // Find the selected card
-    const selectedCard = activePaymentCards?.find(card => card.id === cardId);
+  const buildSuccessUrl = (cardId: string | null, isUpdate: boolean = false): string => {
+    // Find the selected card (if cardId is provided)
+    const selectedCard = cardId ? activePaymentCards?.find(card => card.id === cardId) : null;
 
     const params = new URLSearchParams({
       planName: planData.name,
       subtotal: planData.subtotal.toString(),
       tax: planData.tax.toString(),
       total: planData.total.toString(),
-      cardBrand: selectedCard?.brand || 'mastercard',
-      cardLast4: selectedCard?.termination || '0000',
       redirectUrl: redirectUrl,
       isUpdate: isUpdate.toString()
     });
+
+    // Only add card info if we have it
+    if (selectedCard) {
+      params.set('cardBrand', selectedCard.brand);
+      params.set('cardLast4', selectedCard.termination);
+    }
 
     return `/success?${params.toString()}`;
   };
@@ -350,6 +354,11 @@ export default function CheckoutForm({
       // Get the new card ID from the created card
       const createdCardId = createCardState.cardId || newCardId;
 
+      // Store the new card ID for use in success redirect
+      if (createdCardId) {
+        setNewCardId(createdCardId);
+      }
+
       if (createdCardId && userId && fetchedPlanData) {
         // Create subscription with the new card
         startTransition(() => {
@@ -384,16 +393,11 @@ export default function CheckoutForm({
       // Keep button disabled while redirecting
       setIsRedirecting(true);
 
-      // Get the card ID from submitted form data or created card
-      const cardId = submittedFormData?.savedCardId || newCardId || '';
+      // Get the card ID from submitted form data or created card (can be null)
+      const cardId = submittedFormData?.savedCardId || newCardId || null;
 
-      // Redirect to the success page
-      if (cardId) {
-        window.location.href = buildSuccessUrl(cardId, false);
-      } else {
-        // Fallback to direct redirect if no card info available
-        window.location.href = redirectUrl;
-      }
+      // Always redirect to the success page
+      window.location.href = buildSuccessUrl(cardId, false);
     } else if (subscriptionState && !subscriptionState.success && !processedErrorStates.current.subscription) {
       console.error('Failed to create subscription:', subscriptionState.error);
       processedErrorStates.current.subscription = true; // Mark as processed
@@ -411,16 +415,11 @@ export default function CheckoutForm({
       // Keep button disabled while redirecting
       setIsRedirecting(true);
 
-      // Get the card ID from submitted form data
-      const cardId = submittedFormData?.savedCardId || '';
+      // Get the card ID from submitted form data (can be null)
+      const cardId = submittedFormData?.savedCardId || null;
 
-      // Redirect to the success page (isUpdate = true for plan changes)
-      if (cardId) {
-        window.location.href = buildSuccessUrl(cardId, true);
-      } else {
-        // Fallback to direct redirect if no card info available
-        window.location.href = redirectUrl;
-      }
+      // Always redirect to the success page (isUpdate = true for plan changes)
+      window.location.href = buildSuccessUrl(cardId, true);
     } else if (changeState && !changeState.success && !processedErrorStates.current.change) {
       console.error('Failed to change subscription:', changeState.error);
       processedErrorStates.current.change = true; // Mark as processed
@@ -440,16 +439,11 @@ export default function CheckoutForm({
         // Keep button disabled while redirecting
         setIsRedirecting(true);
 
-        // Get the card ID from submitted form data
-        const cardId = submittedFormData?.savedCardId || '';
+        // Get the card ID from submitted form data (can be null)
+        const cardId = submittedFormData?.savedCardId || null;
 
-        // Redirect to success page (isUpdate = true for payment updates)
-        if (cardId) {
-          window.location.href = buildSuccessUrl(cardId, true);
-        } else {
-          // Fallback to direct redirect if no card info available
-          window.location.href = redirectUrl;
-        }
+        // Always redirect to success page (isUpdate = true for payment updates)
+        window.location.href = buildSuccessUrl(cardId, true);
         setPendingPaymentOnlyUpdate(false);
       } else if (pendingUpgradeAfterPaymentUpdate.data) {
         // This is a payment update before a plan change
