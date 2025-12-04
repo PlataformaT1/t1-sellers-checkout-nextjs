@@ -220,7 +220,7 @@ export const updateSubscriptionPaymentMethodAction = async (
     });
 
     console.log('SUBSCRIPTION PAYMENT UPDATE URL', `${url}/suscriptions/subscriptions/${formData.subscriptionId}/payment`);
-
+    console.log(JSON.stringify(requestBody));
     if (!response.ok) {
       const error = await response.json();
       console.error('Error updating payment method:', error);
