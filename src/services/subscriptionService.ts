@@ -206,8 +206,7 @@ export const updateSubscriptionPaymentMethodAction = async (
 ): Promise<CreateSubscriptionState> => {
   try {
     const requestBody = {
-      payment_id: formData.paymentId,
-      subscriptionId: formData.subscriptionId
+      payment_id: formData.paymentId
     };
 
     console.log('Updating subscription payment method:', requestBody);
@@ -221,7 +220,7 @@ export const updateSubscriptionPaymentMethodAction = async (
     });
 
     console.log('SUBSCRIPTION PAYMENT UPDATE URL', `${url}/suscriptions/subscriptions/${formData.subscriptionId}/payment`);
-    console.log(JSON.stringify(requestBody));
+    
     if (!response.ok) {
       const error = await response.json();
       console.error('Error updating payment method:', error);
