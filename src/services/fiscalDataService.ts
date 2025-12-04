@@ -7,6 +7,11 @@ export interface SaveFiscalDataPayload {
   business_name: string;
   address: {
     zip: string;
+    outer_number: string;
+    state: string;
+    street: string;
+    suburb: string;
+    town: string;
   };
 }
 
