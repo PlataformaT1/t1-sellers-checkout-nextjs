@@ -206,7 +206,8 @@ export const updateSubscriptionPaymentMethodAction = async (
 ): Promise<CreateSubscriptionState> => {
   try {
     const requestBody = {
-      payment_id: formData.paymentId
+      payment_id: formData.paymentId,
+      subscriptionId: formData.subscriptionId
     };
 
     console.log('Updating subscription payment method:', requestBody);
