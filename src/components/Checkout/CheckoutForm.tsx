@@ -806,7 +806,7 @@ export default function CheckoutForm({
           className="flex flex-col lg:flex-row gap-[24px] lg:gap-[80px] w-full lg:max-w-[1290px] flex-1"
         >
           {/* Left Panel - Pricing Summary (Desktop) / Plan Info (Mobile) */}
-          <div className="flex justify-center lg:justify-start px-[14px] lg:px-0 pt-[12px] pb-[20px] lg:pt-0 border-b border-[#e7e7e7] lg:border-b-0 w-[40%]">
+          <div className="flex justify-center lg:justify-start px-[14px] lg:px-0 pt-[12px] pb-[20px] lg:pt-0 border-b border-[#e7e7e7] lg:border-b-0 w-full lg:w-[40%]">
             <PricingSummary
               planData={planData}
               isLoadingPreview={currentSubscription ? previewPending : false}
@@ -815,7 +815,7 @@ export default function CheckoutForm({
           </div>
 
           {/* Right Panel - Payment Form */}
-          <div className="flex-1 flex justify-center lg:justify-end ">
+          <div className="flex-1 flex justify-center lg:justify-end">
             <div className="lg:rounded-[10px] lg:shadow-[0px_0px_5px_1px_rgba(0,0,0,0.1)] p-[0px_20px] md:p-[12px_20px] lg:p-[39px_79px] flex md:items-center justify-center w-full lg:w-auto">
               <SavedPaymentMethodForm
                 control={control}
