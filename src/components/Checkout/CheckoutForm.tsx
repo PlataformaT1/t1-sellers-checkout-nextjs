@@ -86,7 +86,7 @@ export default function CheckoutForm({
 
   // State to track pending operations after fiscal data save
   const [pendingAfterFiscalSave, setPendingAfterFiscalSave] = useState<{
-    type: 'subscription' | 'card-then-subscription' | 'upgrade' | null;
+    type: 'subscription' | 'card-then-subscription' | 'upgrade' | 'card-then-upgrade' | null;
     data: CheckoutFormData | null;
   }>({ type: null, data: null });
 
@@ -134,6 +134,9 @@ export default function CheckoutForm({
   const [pendingUpgradeAfterPaymentUpdate, setPendingUpgradeAfterPaymentUpdate] = useState<{
     data: CheckoutFormData | null;
   }>({ data: null });
+
+  // State to track pending upgrade after card creation (for new cards in upgrade flow)
+  const [pendingUpgradeAfterCardCreation, setPendingUpgradeAfterCardCreation] = useState(false);
 
   // State to track payment-only update (same plan + same cycle, only payment changed)
   const [pendingPaymentOnlyUpdate, setPendingPaymentOnlyUpdate] = useState(false);
@@ -345,10 +348,9 @@ export default function CheckoutForm({
     }
   }, [getPaymentCardsState?.success, activePaymentCards]);
 
-  // Handle successful card creation - then create subscription
+  // Handle successful card creation - then create subscription or upgrade
   useEffect(() => {
-    if (createCardState?.success && pendingSubscription) {
-      console.log('Card created successfully! Creating subscription...');
+    if (createCardState?.success && (pendingSubscription || pendingUpgradeAfterCardCreation)) {
       processedErrorStates.current.createCard = false; // Reset on success
 
       // Get the new card ID from the created card
@@ -359,31 +361,49 @@ export default function CheckoutForm({
         setNewCardId(createdCardId);
       }
 
-      if (createdCardId && userId && fetchedPlanData) {
-        // Create subscription with the new card
-        startTransition(() => {
-          subscriptionAction({
-            userId: userId,
-            shopId: sellerId,
-            planId: fetchedPlanData.id,
-            cardId: createdCardId,
-            planName: fetchedPlanData.name,
-            billingCycle: fetchedPlanData.cycle,
-            currency: fetchedPlanData.currency
-          });
-        });
+      if (createdCardId && fetchedPlanData) {
+        // Check if this is an upgrade flow (existing subscription)
+        if (pendingUpgradeAfterCardCreation && currentSubscription) {
+          console.log('Card created successfully! Updating payment method before upgrade...');
+          // For upgrades: first update payment method, then change subscription
+          setPendingUpgradeAfterPaymentUpdate({ data: submittedFormData });
 
-        setPendingSubscription(false);
+          startTransition(() => {
+            updatePaymentAction({
+              subscriptionId: currentSubscription.cronos_subscription_id,
+              paymentId: createdCardId
+            });
+          });
+
+          setPendingUpgradeAfterCardCreation(false);
+        } else if (pendingSubscription && userId) {
+          console.log('Card created successfully! Creating subscription...');
+          // For new subscriptions: create subscription with the new card
+          startTransition(() => {
+            subscriptionAction({
+              userId: userId,
+              shopId: sellerId,
+              planId: fetchedPlanData.id,
+              cardId: createdCardId,
+              planName: fetchedPlanData.name,
+              billingCycle: fetchedPlanData.cycle,
+              currency: fetchedPlanData.currency
+            });
+          });
+
+          setPendingSubscription(false);
+        }
       }
     } else if (createCardState && !createCardState.success && !processedErrorStates.current.createCard) {
       console.error('Failed to create card:', createCardState.error);
       processedErrorStates.current.createCard = true; // Mark as processed
       setPendingSubscription(false);
+      setPendingUpgradeAfterCardCreation(false);
       // Show error dialog
       setErrorMessage(createCardState.error || 'Error al crear la tarjeta. Por favor, intenta nuevamente.');
       setErrorDialogOpen(true);
     }
-  }, [createCardState, pendingSubscription, userId, fetchedPlanData, paymentId, searchParams, newCardId]);
+  }, [createCardState, pendingSubscription, pendingUpgradeAfterCardCreation, userId, fetchedPlanData, currentSubscription, submittedFormData]);
 
   // Handle subscription success - redirect
   useEffect(() => {
@@ -566,6 +586,31 @@ export default function CheckoutForm({
             phone: userPhone
           });
         });
+      } else if (pendingAfterFiscalSave.type === 'card-then-upgrade' &&
+                 data.cardNumber && data.expirationDate && data.cvv && data.fullName) {
+        // Create new card first, then upgrade subscription
+        setPendingUpgradeAfterCardCreation(true);
+
+        startTransition(() => {
+          createCardAction({
+            cardData: {
+              name: data.fullName!,
+              cardNumber: data.cardNumber!,
+              deadline: data.expirationDate!,
+              cvv: data.cvv!,
+              country: 'MEX',
+              ...(data.postalCode && { zip: data.postalCode }),
+              phone: userPhone,
+              type: 'credit_card',
+              secondary: false
+            },
+            t1PaymentId: paymentId,
+            sellerId: sellerId,
+            email: userEmail,
+            storeName: storeName,
+            phone: userPhone
+          });
+        });
       }
 
       // Reset pending state
@@ -639,10 +684,12 @@ export default function CheckoutForm({
       console.log('Saving fiscal data first...');
 
       // Determine what to do after fiscal data is saved
-      let nextAction: 'subscription' | 'card-then-subscription' | 'upgrade';
+      let nextAction: 'subscription' | 'card-then-subscription' | 'upgrade' | 'card-then-upgrade';
       if (isUpgradeOrDowngrade) {
-        nextAction = 'upgrade';
+        // For upgrades: use saved card or create new card first
+        nextAction = data.savedCardId ? 'upgrade' : 'card-then-upgrade';
       } else {
+        // For new subscriptions: use saved card or create new card first
         nextAction = data.savedCardId ? 'subscription' : 'card-then-subscription';
       }
 
@@ -713,9 +760,14 @@ export default function CheckoutForm({
       return;
     }
 
-    // If adding new card, create it first, then subscription
+    // If adding new card, create it first, then subscription or upgrade
     if (data.cardNumber && data.expirationDate && data.cvv && data.fullName) {
-      setPendingSubscription(true);
+      // Set the appropriate pending state based on whether this is an upgrade
+      if (isUpgradeOrDowngrade && currentSubscription) {
+        setPendingUpgradeAfterCardCreation(true);
+      } else {
+        setPendingSubscription(true);
+      }
 
       startTransition(() => {
         createCardAction({
@@ -725,12 +777,8 @@ export default function CheckoutForm({
             deadline: data.expirationDate!,
             cvv: data.cvv!,
             country: 'MEX',
-            //address: '',
-            //neighborhood: '',
-            ...(  data.postalCode && { zip: data.postalCode }),
+            ...(data.postalCode && { zip: data.postalCode }),
             phone: userPhone,
-            //city: '',
-            //state: '',
             type: 'credit_card',
             secondary: false
           },
