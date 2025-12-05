@@ -226,7 +226,7 @@ export default function SavedPaymentMethodForm({
   };
 
   const handleGoToLanding = (path: string) => {
-    window.open(`https://www.t1.com${path}`, '_blank');
+    window.open(`https://t1.com${path}`, '_blank');
   };
 
   return (
@@ -947,13 +947,13 @@ export default function SavedPaymentMethodForm({
           <Image src={PaymentsIcon} alt='payments' width={43} height={15} />
         </div>
         <div className="content-stretch flex font-bold gap-[16px] items-center justify-center leading-[normal] relative shrink-0 text-[10px] text-center text-nowrap w-full whitespace-pre">
-          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/terms-and-conditions')}>
+          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/mx/legal/terms-and-conditions')}>
             Términos y condiciones
           </p>
           <p className="relative shrink-0 text-[#c3c3c3] m-0">
             |
           </p>
-          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/legal-exception')}>
+          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/mx/legal/terminos-t1tiendas')}>
             Políticas de privacidad
           </p>
         </div>

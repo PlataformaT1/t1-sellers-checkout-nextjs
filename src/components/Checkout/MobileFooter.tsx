@@ -2,6 +2,10 @@ import React from 'react';
 import Image from 'next/image';
 import PaymentsIcon from 'assets/checkout/payments-icon.svg';
 
+const handleGoToLanding = (path: string) => {
+  window.open(`https://t1.com${path}`, '_blank');
+};
+
 export default function MobileFooter() {
   return (
     <div className="lg:hidden bg-white box-border content-stretch flex flex-col gap-[12px] items-center px-[15px] py-[10px] w-full">
@@ -16,9 +20,9 @@ export default function MobileFooter() {
 
         {/* Terms and Privacy links */}
         <div className="content-stretch flex font-bold gap-[16px] items-center justify-center leading-[normal] text-[10px] text-center text-nowrap w-full whitespace-pre">
-          <p className="relative shrink-0 text-[#4c4c4c]">Términos y condiciones</p>
+          <p className="relative shrink-0 text-[#4c4c4c]" onClick={() => handleGoToLanding('/mx/legal/terms-and-conditions')}>Términos y condiciones</p>
           <p className="relative shrink-0 text-[#c3c3c3]">|</p>
-          <p className="relative shrink-0 text-[#4c4c4c]">Políticas de privacidad</p>
+          <p className="relative shrink-0 text-[#4c4c4c]" onClick={() => handleGoToLanding('/mx/legal/terminos-t1tiendas')}>Políticas de privacidad</p>
         </div>
       </div>
     </div>
