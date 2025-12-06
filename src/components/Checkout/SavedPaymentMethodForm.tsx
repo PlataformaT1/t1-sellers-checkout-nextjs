@@ -947,13 +947,13 @@ export default function SavedPaymentMethodForm({
           <Image src={PaymentsIcon} alt='payments' width={43} height={15} />
         </div>
         <div className="content-stretch flex font-bold gap-[16px] items-center justify-center leading-[normal] relative shrink-0 text-[10px] text-center text-nowrap w-full whitespace-pre">
-          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/mx/legal/terms-and-conditions')}>
+          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/mx/legal/terminos-t1tiendas')}>
             Términos y condiciones
           </p>
           <p className="relative shrink-0 text-[#c3c3c3] m-0">
             |
           </p>
-          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/mx/legal/terminos-t1tiendas')}>
+          <p className="relative shrink-0 text-[#4c4c4c] m-0 cursor-pointer" onClick={() => handleGoToLanding('/mx/legal/excepcion-legal')}>
             Políticas de privacidad
           </p>
         </div>
