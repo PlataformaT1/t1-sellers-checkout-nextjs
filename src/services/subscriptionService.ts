@@ -174,7 +174,13 @@ export const changeSubscriptionAction = async (
       console.error('Error changing subscription:', error);
 
       // Extract error message from API response structure
-      const errorMessage = error?.metaData?.message || error?.message || 'Error al actualizar la suscripción';
+      let errorMessage = error?.metaData?.message || error?.message || 'Error al actualizar la suscripción';
+
+      // Try to extract inner message from nested JSON
+      const jsonMatch = errorMessage.match(/"message":"([^"]+)"/);
+      if (jsonMatch) {
+        errorMessage = jsonMatch[1];
+      }
 
       return {
         success: false,
