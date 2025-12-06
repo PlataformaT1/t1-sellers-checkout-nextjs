@@ -52,7 +52,7 @@ export default function CheckoutForm({
         const currentPlanName = currentSubscription?.plan_name || 'plan actual';
 
         data.credit = {
-          label: `Créditos por ${currentPlanName}`,
+          label: `Abono por ${currentPlanName}`,
           amount: -proratedAmount // Negative because it's a credit
         };
         // Adjust total by subtracting the prorated amount

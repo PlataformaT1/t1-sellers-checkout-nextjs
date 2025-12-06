@@ -30,7 +30,7 @@ export interface PlanData {
   period: string;
   // Optional credit from previous plan (for upgrades)
   credit?: {
-    label: string;  // e.g., "Créditos por plan Básico"
+    label: string;  // e.g., "Abono por plan Básico"
     amount: number; // negative value for credit
   };
   // Optional downgrade notice (for downgrades)
