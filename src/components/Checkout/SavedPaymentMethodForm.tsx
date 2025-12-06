@@ -790,9 +790,17 @@ export default function SavedPaymentMethodForm({
                                   width: '100%',
                                   height: '35px',
                                   '& .MuiSelect-select': {
-                                    padding: '0 10px',
+                                    paddingRight: '20px !important',
+                                    paddingLeft: '10px',
                                     fontSize: '12px',
-                                    color: '#4c4c4c'
+                                    color: '#4c4c4c',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    display: 'block'
+                                  },
+                                  '& .MuiSelect-icon': {
+                                    right: '8px'
                                   },
                                   '&.Mui-error .MuiOutlinedInput-notchedOutline': {
                                     borderColor: '#db362b'
@@ -880,9 +888,17 @@ export default function SavedPaymentMethodForm({
                                 width: '100%',
                                 height: '35px',
                                 '& .MuiSelect-select': {
-                                  padding: '0 15px',
+                                  paddingRight: '20px !important',
+                                  paddingLeft: '15px',
                                   fontSize: '12px',
-                                  color: '#4c4c4c'
+                                  color: '#4c4c4c',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  display: 'block'
+                                },
+                                '& .MuiSelect-icon': {
+                                  right: '8px'
                                 },
                                 '&.Mui-error .MuiOutlinedInput-notchedOutline': {
                                   borderColor: '#db362b'
